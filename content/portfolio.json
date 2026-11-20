@@ -1,0 +1,119 @@
+{
+  "site": {
+    "title": "임베디드 개발자 포트폴리오",
+    "description": "C로 만든 가상 SSD와 검증용 Test Shell, SSAFY 임베디드 과정에서 다룬 펌웨어·리눅스·IoT 실습을 정리했습니다.",
+    "example": false
+  },
+  "profile": {
+    "name": "genius1998",
+    "role": "임베디드 소프트웨어 개발자 지망",
+    "intro": "C로 가상 SSD와 검증용 Test Shell을 만들었고, SSAFY 임베디드 과정에서 MCU 펌웨어, 리눅스, IoT를 실습했습니다.",
+    "fields": [
+      "임베디드 C",
+      "스토리지 검증",
+      "MCU 펌웨어"
+    ],
+    "links": [
+      { "label": "GitHub", "url": "https://github.com/genius1998" }
+    ],
+    "experiences": [],
+    "education": [
+      {
+        "title": "SSAFY 16기 임베디드 트랙",
+        "period": "[기간 확인 필요]",
+        "description": "임베디드 C언어, 리눅스 셸, 리눅스 시스템 프로그래밍, 라즈베리파이와 AI, 임베디드 Firmware(STM32·RA6E1), 임베디드 AIoT(ESP32·MQTT·Node-RED·AWS IoT Core) 과정을 수료했습니다."
+      }
+    ]
+  },
+  "projects": [
+    {
+      "id": "virtual-ssd-test-shell",
+      "name": "Virtual SSD Test Shell",
+      "category": "SSAFY 과제 · 개인 진행",
+      "period": "2026.10",
+      "role": "설계, 구현, 테스트 전체 (2인 1조 과제를 혼자 진행)",
+      "title": "쓴 값이 그대로\n읽히는지 검증하는 셸",
+      "accent": "검증",
+      "summary": "txt 파일로 NAND를 대신한 가상 SSD를 C로 만들고, LBA 단위 읽기·쓰기를 명령으로 내려 자동으로 PASS/FAIL을 판정하는 Test Shell을 함께 만들었습니다.",
+      "stack": [
+        "C",
+        "파일 I/O",
+        "system() 프로세스 호출",
+        "Eclipse CDT",
+        "Windows"
+      ],
+      "links": [
+        { "label": "GitHub 저장소", "url": "https://github.com/genius1998/virtual-ssd-test-shell" }
+      ],
+      "image": "",
+      "imageAlt": "",
+      "art": "flow",
+      "artLabels": [
+        "Test Shell",
+        "ssd",
+        "nand.txt"
+      ],
+      "sections": [
+        {
+          "title": "과제 배경",
+          "body": "SSAFY 임베디드 C언어 과정의 SSD Test Shell 과제입니다. 호스트는 SSD에 'LBA 3에 이 값을 써라', 'LBA 3을 읽어라'처럼 논리 주소로만 요청합니다. 펌웨어가 바뀔 때마다 쓴 값이 그대로 읽히는지 전체 영역과 경계 조건까지 다시 확인해야 하는데, 손으로 하면 느리고 빠뜨리기 쉽습니다.\n\n이 프로젝트는 그 검증 흐름을 작게 만들어 본 것입니다. LBA 단위 읽기·쓰기와 검증에 집중했고, 블록 지우기나 셀 마모 같은 NAND의 물리적 특성은 모델링하지 않았습니다."
+        },
+        {
+          "title": "구조",
+          "body": "역할을 세 개로 나눴습니다.\n\n• Test Shell (호스트): 사용자 명령을 받아 검증한 뒤 system()으로 ssd를 실행하고, 종료 코드와 result.txt로 결과를 받습니다.\n• ssd (컨트롤러): 한 번 실행에 명령 하나(W 또는 R)를 처리합니다.\n• nand.txt (NAND): 100줄짜리 파일로, 줄 번호가 곧 LBA입니다. 값은 0x + 대문자 HEX 8자리이고, 쓴 적 없는 LBA는 0x00000000입니다.\n\nTest Shell 명령은 write, read, fullwrite, fullread, testapp1, testapp2, help, exit입니다."
+        },
+        {
+          "title": "내가 한 일",
+          "body": "2인 1조 과제였지만 설계부터 테스트까지 혼자 진행했습니다.\n\n• nand.txt 저장 형식과 저장 방식 설계\n• Test Shell 구현: 명령 반복 입력, ssd 실행, 종료 코드로 성공 판단\n• 셸과 ssd 양쪽의 입력 검증\n• 자동 테스트 testapp1(전체 쓰기 후 100칸 비교), testapp2(LBA 0~5에 30회 쓰기 후 덮어쓰기, 마지막 값 비교)"
+        },
+        {
+          "title": "저장 도중 실패해도 기존 데이터 지키기",
+          "body": "쓰기 한 번마다 nand.txt 100줄을 통째로 다시 저장하는 구조라, 쓰는 도중에 실패하면 기존 데이터까지 잃을 수 있었습니다.\n\n그래서 nand.txt.tmp에 100줄을 먼저 모두 쓰고, fprintf와 fclose가 모두 성공했을 때만 원본과 교체했습니다. 중간에 실패하면 임시 파일만 지우고 원본은 그대로 둡니다. Windows의 rename()은 대상 파일이 있으면 실패하기 때문에 원본을 지운 뒤 이름을 바꿨습니다.\n\n불러올 때도 값이 정확히 100개이고 모두 형식이 맞을 때만 받아들이고, 아니면 NAND FILE ERROR로 멈추게 했습니다. 깨진 파일 위에 이어서 쓰지 않기 위해서입니다."
+        },
+        {
+          "title": "셸과 SSD 양쪽에서 입력 검증",
+          "body": "Test Shell에서 걸러도, ssd는 셸 없이 단독으로 실행할 수 있는 프로그램입니다. 그래서 ssd도 받은 인자를 처음부터 다시 검증하고, 틀리면 INVALID COMMAND를 출력한 뒤 종료 코드 1을 돌려줍니다. 셸은 이 종료 코드로 실패를 알아챕니다.\n\n규칙은 두 곳이 같습니다. LBA는 숫자 2자리 이내의 0~99, 값은 정확히 10자인 0x + 대문자 HEX 8자리입니다. 그래서 read 100(3자리), write 3 0x123(길이 부족), write 3 0xabcdffff(소문자)는 모두 거부됩니다."
+        },
+        {
+          "title": "너무 긴 입력 처리",
+          "body": "명령은 fgets()로 최대 255글자까지 받습니다. 그보다 길면 남은 글자가 입력 버퍼에 남아 다음 fgets()에서 다른 명령처럼 읽힙니다.\n\n그래서 읽은 문자열에 줄바꿈이 없으면 입력이 잘린 것으로 보고, 줄 끝까지 getchar()로 남은 입력을 비운 뒤 그 명령을 거부했습니다. 공백으로 나눈 단어가 4개를 넘거나 명령별 인자 개수가 틀려도 거부합니다."
+        },
+        {
+          "title": "결과",
+          "body": "Windows 로컬에서 실행해 확인했습니다.\n\n• write 3 0xAAAABBBB 후 read 3에서 같은 값 출력\n• fullwrite 0xABCDFFFF 후 read 50에서 같은 값 출력\n• testapp1 PASS, testapp2 PASS\n• read 100, write 3 0x123, write 3 0xabcdffff, hello 입력은 모두 INVALID COMMAND\n\n실행 화면은 GitHub 저장소 README에 있습니다."
+        },
+        {
+          "title": "한계와 다음 단계",
+          "body": "• 원본 삭제와 이름 변경 사이에 프로그램이 종료되면 nand.txt가 사라질 수 있습니다. 임시 파일 방식으로 막지 못한 구간입니다.\n• ssd 실행 파일 경로가 개발 PC 기준 절대 경로로 들어가 있습니다.\n• fullwrite 한 번에 ssd를 100번 실행합니다.\n\n다음에는 Linux nandsim 위에서 페이지 쓰기와 블록 지우기 규칙을 지키는 FTL로 확장해 보려고 합니다. (계획)"
+        }
+      ]
+    }
+  ],
+  "skills": [
+    {
+      "name": "C",
+      "usage": "Virtual SSD Test Shell에서 파일 I/O, fgets·strtok 기반 명령 파싱, 입력 검증, system()으로 다른 프로그램 실행과 종료 코드 처리를 구현했습니다. 과정 실습에서 포인터, 비트 연산, 구조체·union으로 바이너리 데이터를 파싱했습니다."
+    },
+    {
+      "name": "Linux 시스템 프로그래밍",
+      "usage": "과정 실습에서 open·read·write·lseek 파일 입출력, pthread와 mutex, fork와 signal, 소프트웨어 WDT를 다뤘습니다."
+    },
+    {
+      "name": "STM32 HAL / MCU 펌웨어",
+      "usage": "과정 실습에서 GPIO, UART printf 재정의, EXTI·NVIC 인터럽트 우선순위, 타이머 인터럽트, ADC, I2C 센서(DS3231, MPU6050), SPI OLED를 다뤘고, RA6E1 보드로 디바운스와 외부 인터럽트를 실습했습니다."
+    },
+    {
+      "name": "Raspberry Pi 5 · Python",
+      "usage": "과정 실습에서 GPIO와 PWM, Sense HAT IMU, OpenCV 영상 처리, ONNX 모델 카메라 추론을 다뤘습니다."
+    },
+    {
+      "name": "ESP32 · MQTT · Node-RED",
+      "usage": "과정 실습에서 ESP32 센서 노드, Raspberry Pi 5 MQTT 브로커, Node-RED 대시보드, AWS IoT Core 연동을 다뤘습니다."
+    },
+    {
+      "name": "Linux 셸",
+      "usage": "과정 실습에서 기본 명령어, vi, 계정과 권한, 빌드와 검색, 셸 스크립트를 다뤘습니다."
+    }
+  ],
+  "writing": []
+}
