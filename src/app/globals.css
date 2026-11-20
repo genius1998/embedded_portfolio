@@ -95,6 +95,9 @@ button { font:inherit; color:inherit; }
 .detail-section h3 { font-size:16px; font-weight:750; }
 .detail-section h3 span { display:block; font-size:11px; color:var(--ink-2); margin-bottom:7px; }
 .detail-section p { font-size:16px; line-height:1.9; white-space:pre-line; overflow-wrap:anywhere; }
+.detail-figure { margin-top:22px; display:grid; gap:10px; }
+.detail-figure img { display:block; width:100%; max-width:760px; height:auto; border:1px solid var(--line); border-radius:6px; }
+.detail-figure figcaption { font-size:12px; color:var(--ink-2); }
 .text-page { max-width:1000px; padding-block:20px 40px; }
 .text-page h2 { margin-top:16px; font-size:clamp(32px,4vw,48px); line-height:1.2; font-weight:850; letter-spacing:-.035em; }
 .page-intro { margin-top:18px; color:var(--ink-2); max-width:48em; }

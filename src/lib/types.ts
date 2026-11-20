@@ -4,7 +4,7 @@ export type Project = {
   id: string; name: string; category: string; period: string; role: string;
   title: string; accent: string; summary: string; stack: string[]; links: PublicLink[];
   image: string; imageAlt: string; art: "orbit" | "layers" | "flow" | "quantization" | "none";
-  artLabels: string[]; sections: { title: string; body: string }[];
+  artLabels: string[]; sections: { title: string; body: string; image?: string; imageAlt?: string }[];
 };
 export type PortfolioData = {
   site: { title: string; description: string; example: boolean };

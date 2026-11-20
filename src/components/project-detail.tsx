@@ -19,7 +19,7 @@ export const sectionId = (project: Project, index: number) => `${project.id}-sec
 
 export function ProjectSections({ project }: { project: Project }) {
   return <>{project.sections.map((section, i) => <section className="detail-section" id={sectionId(project, i)} key={i} tabIndex={-1} data-reading-section={i}>
-    <h3><span className="num">{String(i + 1).padStart(2, "0")}</span>{section.title}</h3><p>{section.body}</p>
+    <h3><span className="num">{String(i + 1).padStart(2, "0")}</span>{section.title}</h3><div className="detail-section-body"><p>{section.body}</p>{section.image && <figure className="detail-figure"><img src={sitePath(section.image)} alt={section.imageAlt || ""} loading="lazy" /><figcaption>{section.imageAlt}</figcaption></figure>}</div>
   </section>)}</>;
 }
 

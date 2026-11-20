@@ -57,8 +57,12 @@ export function validatePortfolio(data) {
     if (p.image && (typeof p.imageAlt !== "string" || !p.imageAlt.trim())) fail(`${at}.imageAlt`, "이미지 내용을 설명해 주세요.");
     list(p.stack, `${at}.stack`, (item, key) => str(item, key)); links(p.links, `${at}.links`);
     list(p.sections, `${at}.sections`, (section, key) => {
-      if (!obj(section, key, ["title", "body"])) return;
+      if (!object(section)) { fail(key, "객체 형식이어야 합니다."); return; }
+      for (const field of ["title", "body"]) if (!(field in section)) fail(`${key}.${field}`, "필수 항목입니다.");
+      for (const field of Object.keys(section)) if (!["title", "body", "image", "imageAlt"].includes(field)) fail(`${key}.${field}`, "지원하지 않는 항목입니다. 오타 또는 문서를 확인하세요.");
       str(section.title, `${key}.title`); str(section.body, `${key}.body`);
+      if ("image" in section && !isLocalImage(section.image)) fail(`${key}.image`, "/images/example.png처럼 public/images 안의 파일 경로를 쓰세요.");
+      if (section.image && (typeof section.imageAlt !== "string" || !section.imageAlt.trim())) fail(`${key}.imageAlt`, "이미지 내용을 설명해 주세요.");
     });
   });
   list(data.skills, "skills", (skill, at) => {
