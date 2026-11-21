@@ -291,6 +291,50 @@
           "body": "학습은 PC에서, 추론은 보드에서 하는 엣지 AI의 기본 흐름을 직접 해 보며, 학습한 모델을 ONNX로 바꾸면 보드에서 onnxruntime만으로 실행할 수 있다는 것을 알게 되었습니다. Roboflow로 사진에 라벨을 달고, 학습·검증·테스트 세트를 나누고, 이미지 크기를 맞춰 YOLOv8 형식으로 내보내 보면서 학습 전에 데이터를 정리하는 전처리 방법도 익혔습니다. 또 박스가 뜬 장면만 보면 잘 되는 것 같지만, 영상을 끝까지 보니 놓치는 장면도 많았습니다. 클래스 하나, 사진 100장 규모의 실습이라 정확도나 속도는 따로 측정하지 않았습니다."
         }
       ]
+    },
+    {
+      "id": "jetson-nano-road-following",
+      "name": "Jetson Nano 라인 트레이싱 자율주행",
+      "category": "임베디드 제품 개발",
+      "period": "2026.11",
+      "summary": "Jetson Nano 로봇(JETANK)의 앞 카메라 사진에서 '가야 할 지점'을 예측하는 ResNet-18 회귀 모델을 학습시켜, 로봇이 바닥의 검은 선을 따라 스스로 주행하게 했습니다.",
+      "stack": [
+        "Jetson Nano (JETANK)",
+        "PyTorch",
+        "ResNet-18",
+        "Jupyter",
+        "Python"
+      ],
+      "links": [
+        {
+          "label": "GitHub 저장소",
+          "url": "https://github.com/genius1998/jetson-nano-road-following"
+        }
+      ],
+      "image": "/images/others/jetson-road/thumb.webp",
+      "imageAlt": "트랙 맵의 검은 선 위에 서 있는 JETANK 로봇",
+      "sections": [
+        {
+          "title": "주행 결과",
+          "body": "학습한 모델로 JETANK가 맵의 검은 선을 따라 주행하는 실제 영상(46초)을 2.5배속으로 줄인 것입니다. 맵 오른쪽 아래에서 출발해 아래쪽, 왼쪽, 위쪽 선을 따라 오른쪽 위 교차 구간까지 주행합니다.",
+          "image": "/images/others/jetson-road/result.webp",
+          "imageAlt": "JETANK가 맵 위의 검은 선을 따라 주행하는 모습 (2.5배속)"
+        },
+        {
+          "title": "해 본 것",
+          "body": "SSAFY 임베디드 과정 '임베디드 제품 개발' 실습으로, 교안의 노트북과 절차를 따라 2인 팀이 데이터 수집부터 주행 튜닝까지 함께 진행했습니다.\n\n• 데이터 수집: 로봇을 맵 위 여러 자리에 놓고, 카메라 사진마다 슬라이더로 '가야 할 지점' (x, y)를 찍어 파일 이름에 넣어 저장했습니다.\n• 학습: ImageNet으로 사전 학습된 ResNet-18의 마지막 층을 Linear(512, 2)로 바꿔 (x, y)를 예측하는 회귀 모델로 50 epoch 학습했습니다. ColorJitter와 좌우 반전 증강을 쓰고, Test Loss가 가장 낮을 때의 가중치를 저장했습니다.\n• 주행: Jetson Nano에서 모델을 FP16으로 올려 카메라 사진마다 목표 지점을 예측하고, arctan2로 구한 각도에 PD 제어를 적용해 좌우 모터 속도를 조절했습니다. 속도, 조향 게인, kd, 바이어스는 슬라이더로 맞췄습니다."
+        },
+        {
+          "title": "학습 로그 분석",
+          "body": "학습 노트북에 남은 50 epoch 로그를 따로 정리했습니다. Test Loss는 1~2 epoch에 크게 흔들리다가 5 epoch에 0.015까지 떨어졌고, 36 epoch에서 가장 낮은 0.001495(MSE, RMSE 약 0.039)를 기록해 이 가중치가 저장되었습니다. 다만 테스트 세트가 작고(10%) 테스트할 때도 증강이 들어가며, 테스트 세트로 모델을 골랐기 때문에 이 수치는 실제보다 좋게 나왔을 수 있습니다. 주행 중 FPS나 완주율은 재지 않았습니다.",
+          "image": "/images/others/jetson-road/loss.webp",
+          "imageAlt": "Train/Test Loss 곡선, 50 epoch, 로그 스케일. 36 epoch에서 Test Loss 최저 0.001495"
+        },
+        {
+          "title": "배운 점",
+          "body": "사진에서 '가야 할 지점'이라는 숫자 두 개를 바로 예측하게 하면, 선을 찾는 규칙을 직접 짜지 않아도 로봇이 선을 따라간다는 것을 알게 되었습니다. 사전 학습된 ResNet-18의 마지막 층만 바꿔도 5 epoch 만에 Loss가 크게 줄어드는 전이학습의 효과를 확인했고, 예측한 좌표를 각도로 바꿔 P(게인)와 D(kd)로 모터를 움직이는 PD 제어의 흐름도 익혔습니다. 또 Loss 숫자만 보면 좋아 보여도 평가 방식 때문에 낙관적일 수 있다는 것을 로그를 분석하며 알게 되었습니다."
+        }
+      ]
     }
   ],
   "skills": [
