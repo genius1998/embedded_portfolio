@@ -27,7 +27,7 @@
       {
         "title": "웹·AI 서비스 개발과 프로그래밍 외주",
         "period": "2024 –",
-        "description": "외주(PSLab, 크몽)로 Python 크롤링·자동화와 가격 비교 GUI 프로그램을 만들어 판매했고, 이를 웹으로 옮기며 VLM으로 상품 이미지를 비교했습니다. 이 밖에 소상공인 리워드 앱 '낭만 토미 키우기'(RAG·OCR)와 건강기능식품 추천 '성분콕'(OCR·추천)을 만들었습니다."
+        "description": "외주(PSLab, 크몽)로 Python 크롤링·자동화와 가격 비교 GUI 프로그램을 만들어 판매했고, 이를 웹으로 옮기며 VLM으로 상품 이미지를 비교했습니다. 이 밖에 소상공인 리워드 앱 '낭만 토미 키우기'(RAG·OCR)와 건강기능식품 추천 '성분콕'(OCR·추천)을 만들었습니다. 별도로 SSAFY VQA 챌린지(이미지 질의응답)에서 VLM을 활용해 Public Score 0.96395를 기록했습니다."
       }
     ],
     "education": [
@@ -44,29 +44,49 @@
       {
         "title": "AVR 기반 임베디드 펌웨어 설계",
         "period": "2024.07.11 – 07.12",
-        "description": "금오공대 IDEC 아카데미, 12시간 수료"
+        "description": "금오공대 IDEC 아카데미, 12시간 수료",
+        "link": {
+          "label": "수료증 (PDF)",
+          "url": "https://genius1998.github.io/embedded_portfolio/docs/avr-certificate.pdf"
+        }
       }
     ],
     "awards": [
       {
         "title": "정보처리기사",
         "period": "2026.09.11",
-        "description": "합격 (한국산업인력공단)"
+        "description": "합격 (한국산업인력공단)",
+        "link": {
+          "label": "자격증 (PDF)",
+          "url": "https://genius1998.github.io/embedded_portfolio/docs/engineer-certificate.pdf"
+        }
       },
       {
         "title": "대학생 논문경진대회 우수논문상 동상",
         "period": "2025.11.28",
-        "description": "한국정보기술학회 추계종합학술대회. 「TurtleBot 기반 실내 쓰레기 수거 및 분리배출 자동화 시스템」 공동저자"
+        "description": "한국정보기술학회 추계종합학술대회. 「TurtleBot 기반 실내 쓰레기 수거 및 분리배출 자동화 시스템」 공동저자",
+        "link": {
+          "label": "상장 (PDF)",
+          "url": "https://genius1998.github.io/embedded_portfolio/docs/kiit-bronze-award.pdf"
+        }
       },
       {
         "title": "2025 프로그래밍 경진대회 3등",
         "period": "2025.09.13",
-        "description": "국립금오공과대학교 대학일자리플러스센터, 파이썬좋아 팀"
+        "description": "국립금오공과대학교 대학일자리플러스센터, 파이썬좋아 팀",
+        "link": {
+          "label": "상장 (PDF)",
+          "url": "https://genius1998.github.io/embedded_portfolio/docs/programming-award.pdf"
+        }
       },
       {
         "title": "한국정보기술학회 하계종합학술대회 논문 발표",
         "period": "2025.06",
-        "description": "ROS 2 쓰레기 수거 로봇 논문 제1저자"
+        "description": "「YOLOv5와 ROS 2 기반 실내 쓰레기 수거 및 분리배출 시스템」 제1저자, pp.1495–1497",
+        "link": {
+          "label": "DBpia",
+          "url": "https://www.dbpia.co.kr/journal/articleDetail?nodeId=NODE12288895"
+        }
       }
     ]
   },
@@ -75,7 +95,7 @@
       "id": "balance-bot",
       "name": "STM32 2륜 밸런싱 로봇",
       "category": "MCU 펌웨어 · 제어",
-      "period": "2026",
+      "period": "2026.08 – 2026.09",
       "role": "기구, 배선, 펌웨어, 제어 튜닝 (개인)",
       "title": "4ms마다 기울기를 읽고\n넘어지기 전에 바퀴를 미는 로봇",
       "accent": "4ms",
@@ -138,13 +158,13 @@
         },
         {
           "title": "결과",
-          "body": "각도 PID로 자가균형하는 실제 시연 영상(12.6초)입니다. 저장소 README에는 각도 제어만으로 약 1분간 균형을 유지했다고 기록했습니다.",
+          "body": "각도 PID로 자가균형하는 실제 시연 영상(12.6초)입니다.",
           "image": "/images/balance-bot/demo.webp",
           "imageAlt": "2륜 밸런싱 로봇이 스스로 균형을 잡고 서 있는 시연 영상 (12.6초)"
         },
         {
           "title": "한계와 다음 단계",
-          "body": "• 각도만 제어하면 바퀴 속도가 한쪽으로 쌓여 최고 속도(160RPM)에 닿고, 그때 다음 기울기를 따라가지 못해 넘어집니다. 이것이 1~2분 한계의 원인이라고 봤습니다.\n• 그래서 엔코더로 좌우 바퀴 속도를 재고, 속도가 한쪽으로 쌓이면 목표각을 반대로 보정(±3° 제한)하는 외부 루프를 구현했습니다. 다만 기본값은 KV = 0(꺼짐)이고, 외부 루프를 켠 장시간 균형은 아직 튜닝 중입니다.\n• 장시간 안정성은 따로 측정하지 않았습니다. 모터 단자 커패시터, NiMH 배터리, 블루투스 무선 튜닝을 다음 개선 항목으로 정리했습니다."
+          "body": "• 각도만 제어하면 바퀴 속도가 한쪽으로 쌓여 최고 속도(160RPM)에 닿고, 그때 다음 기울기를 따라가지 못해 넘어집니다. 오래 세워 둘수록 넘어지는 원인을 이것으로 봤습니다.\n• 그래서 엔코더로 좌우 바퀴 속도를 재고, 속도가 한쪽으로 쌓이면 목표각을 반대로 보정(±3° 제한)하는 외부 루프를 구현했습니다. 다만 기본값은 KV = 0(꺼짐)이고, 외부 루프를 켠 장시간 균형은 아직 튜닝 중입니다.\n• 장시간 안정성은 따로 측정하지 않았습니다. 모터 단자 커패시터, NiMH 배터리, 블루투스 무선 튜닝을 다음 개선 항목으로 정리했습니다."
         }
       ]
     },
@@ -152,7 +172,7 @@
       "id": "ros-trash-robot",
       "name": "ROS 2 쓰레기 수거·분리배출 로봇",
       "category": "ROS 2 로봇팔 제어",
-      "period": "2025",
+      "period": "2025.03 – 2025.12",
       "role": "Manipulator Control 담당 (3인 팀)",
       "title": "인식한 쓰레기를 집어\n맞는 통에 넣는 로봇팔",
       "accent": "로봇팔",
@@ -166,8 +186,12 @@
       ],
       "links": [
         {
+          "label": "하계 학술대회 논문 (DBpia)",
+          "url": "https://www.dbpia.co.kr/journal/articleDetail?nodeId=NODE12288895"
+        },
+        {
           "label": "우수논문상 상장 (PDF)",
-          "url": "https://kim-ingyu-engineering.cyberhelper099.chatgpt.site/docs/kiit-bronze-award.pdf"
+          "url": "https://genius1998.github.io/embedded_portfolio/docs/kiit-bronze-award.pdf"
         }
       ],
       "image": "/images/ros-robot/robot.webp",
@@ -198,6 +222,12 @@
           "body": "폼보드로 만든 실내 시연 환경에서 캔과 플라스틱을 집어 통에 넣는 동작을 확인했습니다.",
           "subsections": [
             {
+              "title": "캔 수거 과정",
+              "body": "캔을 집은 로봇이 분리배출 통 쪽으로 이동해 CAN 통에 넣는 과정을 세 장면으로 이어 붙였습니다.",
+              "image": "/images/ros-robot/can-sequence.webp",
+              "imageAlt": "캔을 든 로봇이 시연장 안에서 이동해 CAN 통에 캔을 넣는 세 장면"
+            },
+            {
               "title": "캔 파지 시연",
               "body": "로봇팔이 캔을 집는 장면입니다.",
               "image": "/images/ros-robot/grasp.webp",
@@ -213,7 +243,7 @@
         },
         {
           "title": "성과",
-          "body": "• 2025.06 한국정보기술학회 하계종합학술대회 논문 발표 (제1저자)\n• 2025.11.28 한국정보기술학회 추계종합학술대회 대학생 논문경진대회 우수논문상 동상 (공동저자), 「TurtleBot 기반 실내 쓰레기 수거 및 분리배출 자동화 시스템」"
+          "body": "• 2025.06 한국정보기술학회 하계종합학술대회 논문 발표 (제1저자), 「YOLOv5와 ROS 2 기반 실내 쓰레기 수거 및 분리배출 시스템」\n• 2025.11.28 한국정보기술학회 추계종합학술대회 대학생 논문경진대회 우수논문상 동상 (공동저자), 「TurtleBot 기반 실내 쓰레기 수거 및 분리배출 자동화 시스템」"
         }
       ]
     },
@@ -539,7 +569,7 @@
       "links": [
         {
           "label": "HDL 설계보고서 (PDF)",
-          "url": "https://kim-ingyu-engineering.cyberhelper099.chatgpt.site/docs/hdl-report.pdf"
+          "url": "https://genius1998.github.io/embedded_portfolio/docs/hdl-report.pdf"
         }
       ],
       "image": "/images/others/verilog/diagram.svg",

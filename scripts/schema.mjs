@@ -27,7 +27,13 @@ export function validatePortfolio(data) {
     if (!isPublicUrl(link.url)) fail(`${at}.url`, "https:// 주소 또는 mailto:이메일을 입력하세요.");
   });
   const records = (value, key) => list(value, key, (entry, at) => {
-    if (!obj(entry, at, ["title", "period", "description"])) return;
+    if (!object(entry)) { fail(at, "객체 형식이어야 합니다."); return; }
+    const { link, ...rest } = entry;
+    if (!obj(rest, at, ["title", "period", "description"])) return;
+    if ("link" in entry && obj(link, `${at}.link`, ["label", "url"])) {
+      str(link.label, `${at}.link.label`);
+      if (!isPublicUrl(link.url, false)) fail(`${at}.link.url`, "https:// 주소를 입력하세요.");
+    }
     str(entry.title, `${at}.title`); str(entry.period, `${at}.period`); str(entry.description, `${at}.description`, true);
   });
   if (!obj(data, "portfolio", ["site", "profile", "projects", "others", "skills", "writing"])) return errors;

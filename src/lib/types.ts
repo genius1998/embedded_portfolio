@@ -1,5 +1,5 @@
 export type PublicLink = { label: string; url: string };
-export type RecordEntry = { title: string; period: string; description: string };
+export type RecordEntry = { title: string; period: string; description: string; link?: PublicLink };
 export type SubSection = { title: string; body: string; image?: string; imageAlt?: string };
 export type Section = SubSection & { subsections?: SubSection[] };
 export type Project = {
