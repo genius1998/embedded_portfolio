@@ -264,7 +264,21 @@
       "sections": [
         {
           "title": "해 본 것",
-          "body": "SSAFY 임베디드 과정 '라즈베리파이와 AI'의 Custom Object Detect 실습입니다. 데이터를 모으는 것부터 보드 위에서 추론하는 것까지 엣지 AI의 흐름을 처음부터 끝까지 직접 따라가 봤습니다.\n\n• 데이터 수집: Raspberry Pi 5 카메라(Picamera2)로 게임패드 사진 100장을 찍었습니다.\n• 라벨링과 전처리: Roboflow에서 game pad 클래스 하나로 바운딩 박스를 달고, 학습·검증·테스트를 70/20/10장으로 나눴습니다. 이미지는 512×512로 맞췄고 증강은 하지 않았습니다.\n• 학습: 이 데이터로 YOLOv8n을 파인튜닝했습니다.\n• 변환: 학습한 모델을 입력 224×224의 ONNX로 내보내고, Netron으로 입력과 출력 구조를 확인했습니다.\n• 추론: Raspberry Pi 5에서 onnxruntime으로 카메라 영상을 받아 게임패드를 실시간으로 찾았습니다."
+          "body": "SSAFY 임베디드 과정 '라즈베리파이와 AI'의 Custom Object Detect 실습입니다. 데이터를 모으는 것부터 보드 위에서 추론하는 것까지 엣지 AI의 흐름을 처음부터 끝까지 직접 따라가 봤습니다.\n\n• 데이터 수집: Raspberry Pi 5 카메라(Picamera2)로 게임패드 사진 100장을 찍었습니다.\n• 라벨링과 전처리: Roboflow에서 game pad 클래스 하나로 게임패드 윤곽을 따라 다각형 라벨을 달고, 학습·검증·테스트를 70/20/10장으로 나눴습니다. 이미지는 512×512로 맞췄고 증강은 하지 않았습니다.\n• 학습: 이 데이터로 YOLOv8n을 파인튜닝했습니다.\n• 변환: 학습한 모델을 입력 224×224의 ONNX로 내보내고, Netron으로 입력과 출력 구조를 확인했습니다.\n• 추론: Raspberry Pi 5에서 onnxruntime으로 카메라 영상을 받아 게임패드를 실시간으로 찾았습니다."
+        },
+        {
+          "title": "Roboflow 라벨링과 전처리",
+          "body": "Raspberry Pi 5로 찍은 사진 100장을 Roboflow 프로젝트에 올리고, 게임패드 바깥 윤곽을 따라 다각형(polygon)으로 game pad 라벨을 달았습니다. 내보낼 때는 EXIF 방향 맞추기와 512×512 크기 맞추기(stretch)만 적용하고 증강은 쓰지 않았으며, 학습·검증·테스트를 70/20/10장으로 나눠 YOLOv8 형식으로 받았습니다. YOLOv8n 검출 모델로 학습할 때는 이 다각형이 이를 감싸는 박스로 바뀌어 쓰입니다.",
+          "image": "/images/others/rpi-yolo/roboflow-dataset.jpg",
+          "imageAlt": "Roboflow 데이터셋 화면. 업로드한 게임패드 사진마다 분홍색 다각형 라벨이 표시되어 있다",
+          "subsections": [
+            {
+              "title": "라벨 한 장 확대",
+              "body": "사진 한 장을 확대한 모습입니다. 게임패드 바깥 윤곽을 따라 다각형 라벨이 달려 있습니다.",
+              "image": "/images/others/rpi-yolo/roboflow-label.jpg",
+              "imageAlt": "게임패드 사진 위에 달린 파란 다각형 라벨"
+            }
+          ]
         },
         {
           "title": "결과",
