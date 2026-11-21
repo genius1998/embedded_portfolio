@@ -5,7 +5,7 @@ export type Section = SubSection & { subsections?: SubSection[] };
 export type Project = {
   id: string; name: string; category: string; period: string; role: string;
   title: string; accent: string; summary: string; stack: string[]; links: PublicLink[];
-  image: string; imageAlt: string; art: "orbit" | "layers" | "flow" | "nand" | "quantization" | "none";
+  image: string; imageAlt: string; art: "orbit" | "layers" | "flow" | "nand" | "signal" | "quantization" | "none";
   artLabels: string[]; sections: Section[];
 };
 export type PortfolioData = {
