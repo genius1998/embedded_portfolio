@@ -31,7 +31,7 @@
   "projects": [
     {
       "id": "virtual-ssd-test-shell",
-      "name": "Virtual SSD Test Shell",
+      "name": "가상 SSD Test Shell",
       "category": "SSAFY 과제",
       "period": "2026.10",
       "role": "설계, 구현, 테스트",
@@ -105,8 +105,8 @@
           "imageAlt": "write/read, fullwrite, testapp1·testapp2 PASS 실행 화면"
         },
         {
-          "title": "한계와 다음 단계",
-          "body": "• 원본 삭제와 이름 변경 사이에 프로그램이 종료되면 nand.txt가 사라질 수 있습니다. 임시 파일 방식으로 막지 못한 구간입니다.\n• ssd 실행 파일 경로가 개발 PC 기준 절대 경로로 들어가 있습니다.\n• fullwrite 한 번에 ssd를 100번 실행합니다.\n\n다음에는 Linux nandsim 위에서 페이지 쓰기와 블록 지우기 규칙을 지키는 FTL로 확장해 보려고 합니다. (계획)"
+          "title": "배운 점",
+          "body": "• C 문자열 처리의 동작 원리: 명령어 파싱에 strtok을 쓰면서 원본 문자열을 직접 바꾸고 내부 상태를 기억한다는 점을 이해했습니다. fgets 길이 초과 처리까지 다루며 입력을 다룰 때 경계 조건부터 확인하는 습관이 생겼습니다.\n• 검증 자동화: testapp1, testapp2처럼 쓰기, 덮어쓰기, 읽기 비교를 스크립트로 반복하며 사람이 확인하던 일을 PASS/FAIL로 판정하도록 만들었습니다. 저장 중 실패 같은 예외 상황을 직접 재현해 보는 것도 검증의 일부라는 것을 배웠습니다.\n• SSD·NAND 도메인 이해: LBA 단위 읽기/쓰기, 컨트롤러와 FTL의 역할, NAND의 마모와 데이터 보존 문제를 공부하며 이 프로젝트가 실제 SSD의 어느 부분을 흉내 낸 것인지 구분할 수 있게 됐습니다.\n\n다음에는 FTL의 논리-물리 주소 매핑을 직접 구현해 보고 싶습니다."
         }
       ]
     }
@@ -114,7 +114,7 @@
   "skills": [
     {
       "name": "C",
-      "usage": "Virtual SSD Test Shell에서 파일 I/O, fgets·strtok 기반 명령 파싱, 입력 검증, 다른 프로그램 실행과 종료 코드 처리를 구현했습니다. 과정 실습에서 포인터, 비트 연산, 구조체·union으로 바이너리 데이터를 파싱했습니다."
+      "usage": "가상 SSD Test Shell에서 파일 I/O, fgets·strtok 기반 명령 파싱, 입력 검증, 다른 프로그램 실행과 종료 코드 처리를 구현했습니다. 과정 실습에서 포인터, 비트 연산, 구조체·union으로 바이너리 데이터를 파싱했습니다."
     },
     {
       "name": "Linux 시스템 프로그래밍",
