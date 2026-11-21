@@ -32,7 +32,7 @@
     {
       "id": "virtual-ssd-test-shell",
       "name": "가상 SSD Test Shell",
-      "category": "SSAFY 과제",
+      "category": "임베디드 C언어",
       "period": "2026.10",
       "role": "설계, 구현, 테스트",
       "title": "NAND에 쓴 값이 그대로\n읽히는지 검증하는 셸",
@@ -127,7 +127,7 @@
     {
       "id": "signal-mining-firmware",
       "name": "Signal 기반 채굴 펌웨어 제어 시스템",
-      "category": "SSAFY 과제",
+      "category": "리눅스 시스템 프로그래밍",
       "period": "2026.10",
       "role": "설계, 구현, 테스트",
       "title": "시그널로 제어하고\n워치독으로 되살리는 펌웨어",
@@ -242,7 +242,7 @@
     {
       "id": "rpi-yolo-edge-ai",
       "name": "라즈베리파이 엣지 AI 객체 인식",
-      "category": "SSAFY 과정 실습",
+      "category": "라즈베리파이와 AI",
       "period": "2026.11",
       "summary": "Raspberry Pi 5 카메라로 게임패드 사진을 모아 라벨링하고, YOLOv8n을 학습시켜 ONNX로 바꾼 뒤 보드 위에서 실시간으로 게임패드를 찾았습니다.",
       "stack": [
