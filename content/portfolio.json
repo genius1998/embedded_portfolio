@@ -555,6 +555,53 @@
       ]
     },
     {
+      "id": "rpi5-ai-device-integration",
+      "name": "라즈베리파이 5 AI 기기 연동",
+      "category": "AI 코어 프로젝트",
+      "period": "2026.11",
+      "summary": "PC AI 대시보드에서 LLM이 고른 이동 명령이 Raspberry Pi 5에 연결한 SPI OLED 글자와 LED 점멸로 나오도록 실물 기기를 배선하고 연동했습니다. API 검증 114/114 PASS.",
+      "stack": [
+        "Raspberry Pi 5",
+        "Camera Module 3",
+        "SPI OLED (SSD1306)",
+        "GPIO",
+        "HTTP API",
+        "Python"
+      ],
+      "links": [
+        {
+          "label": "GitHub 저장소",
+          "url": "https://github.com/genius1998/rpi5-ai-device-integration"
+        }
+      ],
+      "image": "/images/others/ai-core/thumb.webp",
+      "imageAlt": "브레드보드의 OLED에 LEFT가 표시된 Raspberry Pi 5 배선",
+      "sections": [
+        {
+          "title": "해 본 것",
+          "body": "SSAFY AI 코어 프로젝트 3회차 1일차 실습입니다. 2회차에 다룬 AI Workflow(YOLO·VLM·MediaPipe 인식 → LLM 도구 선택 → 규칙으로 확정)를 실물 기기로 옮겼습니다. 서버·대시보드·검증 스크립트는 과정에서 제공한 코드를 그대로 썼고, 혼자서 배선부터 검증까지 진행했습니다.\n\n• 배선: LED 2개(GPIO 17·27), SPI OLED(SSD1306, SPI0 MOSI·SCLK·CE0와 DC·RST), 카메라(CSI)를 Raspberry Pi 5에 직접 연결했습니다.\n• 센서 테스트: 카메라(측정 15.4fps), LED 점멸, OLED 표시를 하나씩 단독으로 확인해 3종 모두 PASS를 받았습니다.\n• 연동: 기기 서버가 카메라 영상·LED 점멸·OLED 표시를 HTTP 주소로 열고, PC 대시보드가 이를 중계합니다.\n• 검증: 기기 없이 21/21, 기기와 함께 114/114로 API 검증을 통과했습니다.",
+          "image": "/images/others/ai-core/wiring.webp",
+          "imageAlt": "브레드보드에 LED 2개와 OLED를 꽂고 Raspberry Pi 5에 배선한 모습"
+        },
+        {
+          "title": "동작 결과",
+          "body": "기기 탭에서 \"오른쪽으로 3칸 가\"라고 물으면 LLM이 move 도구를 고르고, OLED에 RIGHT가 뜨며 오른쪽 LED가 3번 깜빡입니다. \"앞에 뭐가 있어?\"는 장면 설명만 하고 기기 출력은 바뀌지 않습니다. 위·아래 이동은 LED·OLED가 좌우만 표시하기 때문에 답변만 나옵니다. 아래 영상은 이동 명령을 보내 OLED 글자가 바뀌는 장면입니다(2배속).",
+          "image": "/images/others/ai-core/result.webp",
+          "imageAlt": "대시보드에서 이동 명령을 보내자 OLED 표시가 LEFT에서 RIGHT로 바뀌는 장면"
+        },
+        {
+          "title": "API 검증",
+          "body": "검증 스크립트를 기기 없이 돌려 잘못된 요청은 400, 연결할 수 없는 기기는 502로 응답하는지 확인했고(21/21), 기기와 함께 돌려 카메라·LED·OLED 응답, PC 중계, 방향 → 출력 매핑, 2회차 항목까지 확인했습니다(114/114).",
+          "image": "/images/others/ai-core/api-device.webp",
+          "imageAlt": "API 검증 --device 실행 결과. 전체 114/114 PASS"
+        },
+        {
+          "title": "배운 점",
+          "body": "LED는 GPIO 출력 핀으로, OLED는 SPI0와 DC·RST 핀으로 연결된다는 것을 직접 배선하며 익혔고, 연동 전에 센서마다 단독 테스트로 배선부터 확인하는 순서를 배웠습니다. 카메라·LED·OLED를 기기 서버의 주소로 열고 PC는 중계만 하면 AI 판단과 하드웨어 출력을 나눌 수 있다는 구조도 이해했습니다. 코드는 과정에서 제공된 것이라 직접 고친 부분은 없습니다."
+        }
+      ]
+    },
+    {
       "id": "verilog-mode-select",
       "name": "Verilog HDL 디지털 제어 시스템",
       "category": "디지털 논리 설계",
