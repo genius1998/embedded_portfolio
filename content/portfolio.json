@@ -680,8 +680,8 @@
           "url": "https://github.com/0731chae/ssafy_stm32_study"
         }
       ],
-      "image": "/images/others/stm32/thumb.webp",
-      "imageAlt": "가변저항과 LED를 브레드보드에 연결한 STM32 ADC·PWM 실습",
+      "image": "/images/others/stm32/thumb.jpg",
+      "imageAlt": "STM32 공동 스터디 로드맵. 보드를 중심으로 GPIO, 초음파 센서, UART, 인터럽트, 타이머, PWM, ADC, DMA 주제를 연결한 그림",
       "sections": [
         {
           "title": "스터디 소개",
