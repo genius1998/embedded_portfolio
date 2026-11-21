@@ -42,6 +42,9 @@ button { font:inherit; color:inherit; }
 .public-links { display:flex; flex-wrap:wrap; gap:8px 18px; font-size:12px; color:var(--ink-2); }
 .public-links a { text-decoration:none; }
 .public-links a:hover { color:var(--ink); text-decoration:underline; text-underline-offset:4px; }
+.link-buttons a { display:inline-flex; align-items:center; gap:6px; min-height:36px; padding:6px 14px; border:1px solid var(--ink); color:var(--ink); font-size:12px; font-weight:750; }
+.link-buttons a:hover { background:var(--ink); color:var(--paper); text-decoration:none; }
+.role-label { display:inline-block; margin-right:10px; padding:2px 7px; border:1px solid var(--line); font-size:11px; font-weight:600; color:var(--ink-2); vertical-align:1px; }
 .browser-side>.public-links { margin-top:16px; padding-inline:10px; }
 .template-note { margin-top:20px; padding-inline:10px; font-size:11px; line-height:1.6; color:var(--ink-2); }
 .browser-main { min-width:0; min-height:0; overflow:auto; background:var(--stage); color:var(--stage-ink); scrollbar-width:thin; }
@@ -81,6 +84,7 @@ button { font:inherit; color:inherit; }
 .art-fallback i:nth-child(2) { inset:20% 12% 10%; }
 .art-fallback i:nth-child(3) { inset:10% 18% 20%; }
 .art-fallback-layers i { border-radius:0; }
+.art-fallback-nand i { border-radius:0; transform:rotateX(55deg) rotateZ(-35deg); }
 .art-fallback-flow i { height:8%; border-radius:50%; transform:rotate(-15deg); }
 .art-blank { display:grid; flex:1; min-height:300px; place-items:center; color:var(--line); font-size:clamp(32px,6vw,80px); font-weight:850; letter-spacing:-.04em; }
 .project-image { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding-block:28px; min-height:250px; }
@@ -95,6 +99,9 @@ button { font:inherit; color:inherit; }
 .detail-section h3 { font-size:16px; font-weight:750; }
 .detail-section h3 span { display:block; font-size:11px; color:var(--ink-2); margin-bottom:7px; }
 .detail-section p { font-size:16px; line-height:1.9; white-space:pre-line; overflow-wrap:anywhere; }
+.detail-subsection { margin-top:30px; padding-top:24px; border-top:1px dashed var(--line); }
+.detail-subsection h4 { display:flex; align-items:baseline; gap:10px; margin-bottom:10px; font-size:17px; font-weight:750; letter-spacing:-.02em; }
+.detail-subsection h4 span { font-size:11px; color:var(--ink-2); flex:none; }
 .detail-figure { margin-top:22px; display:grid; gap:10px; }
 .detail-figure img { display:block; width:100%; max-width:760px; height:auto; border:1px solid var(--line); border-radius:6px; }
 .detail-figure figcaption { font-size:12px; color:var(--ink-2); }
@@ -197,7 +204,7 @@ button { font:inherit; color:inherit; }
 .detail-content { container:detail / inline-size; }
 .detail-layout { display:grid; grid-template-columns:minmax(0,236px) minmax(0,1fr); gap:0 clamp(28px,4cqw,64px); align-items:start; }
 .detail-place { position:sticky; top:0; z-index:3; display:grid; gap:14px; max-height:calc(100dvh - var(--side-h,0px) - var(--head-h,0px) - var(--foot-h,0px) - 36px); padding:20px 0 12px; overflow-y:auto; scrollbar-width:thin; overscroll-behavior:contain; background:var(--paper); }
-.detail-mark { max-width:140px; color:var(--ink); }
+.detail-mark { max-width:180px; color:var(--ink); }
 .detail-mark svg { display:block; width:100%; height:auto; }
 .detail-mark img { display:block; width:100%; max-height:100px; object-fit:contain; }
 .detail-location { display:grid; gap:3px; min-width:0; }

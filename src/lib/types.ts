@@ -1,10 +1,12 @@
 export type PublicLink = { label: string; url: string };
 export type RecordEntry = { title: string; period: string; description: string };
+export type SubSection = { title: string; body: string; image?: string; imageAlt?: string };
+export type Section = SubSection & { subsections?: SubSection[] };
 export type Project = {
   id: string; name: string; category: string; period: string; role: string;
   title: string; accent: string; summary: string; stack: string[]; links: PublicLink[];
-  image: string; imageAlt: string; art: "orbit" | "layers" | "flow" | "quantization" | "none";
-  artLabels: string[]; sections: { title: string; body: string; image?: string; imageAlt?: string }[];
+  image: string; imageAlt: string; art: "orbit" | "layers" | "flow" | "nand" | "quantization" | "none";
+  artLabels: string[]; sections: Section[];
 };
 export type PortfolioData = {
   site: { title: string; description: string; example: boolean };

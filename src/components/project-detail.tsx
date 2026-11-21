@@ -8,6 +8,13 @@ import { QuantizationMark } from "./quantization-mark";
 function ProjectMark({ project }: { project: Project }) {
   if (project.image) return <img src={sitePath(project.image)} alt="" />;
   if (project.art === "quantization") return <QuantizationMark />;
+  if (project.art === "nand") return <svg className="nand-mark" viewBox="0 0 132 64" role="img" aria-label="nand.txt의 LBA 0~99 100칸을 모두 쓰고 읽어 비교해 PASS">
+    {Array.from({ length: 100 }, (_, k) => <rect key={k} x={2 + (k % 10) * 6} y={2 + Math.floor(k / 10) * 6} width="5" height="5" rx="0.6" fill="var(--signal)" opacity={0.35 + 0.65 * ((k % 10) + Math.floor(k / 10)) / 18} />)}
+    <text x="70" y="14" fontSize="7" fill="currentColor" opacity=".6" fontFamily="var(--font-mono), monospace">nand.txt</text>
+    <text x="70" y="25" fontSize="7" fill="currentColor" opacity=".6" fontFamily="var(--font-mono), monospace">LBA 0–99</text>
+    <text x="70" y="44" fontSize="9" fill="currentColor" fontWeight="700" fontFamily="var(--font-mono), monospace">W → R</text>
+    <text x="70" y="58" fontSize="11" fill="var(--signal)" fontWeight="800" fontFamily="var(--font-mono), monospace">PASS</text>
+  </svg>;
   return <svg viewBox="0 0 120 64" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.2">
     {project.art === "layers" ? <>{[0, 1, 2].map((i) => <path key={i} d={`M18 ${22 + i * 9} 66 ${8 + i * 9} 106 ${24 + i * 9} 58 ${39 + i * 9}Z`} opacity={0.35 + i * 0.25} />)}</>
     : project.art === "flow" ? <>{[0, 1, 2].map((i) => <path key={i} d={`M8 ${22 + i * 10} C36 ${-4 + i * 10} 76 ${66 + i * 10} 112 ${23 + i * 10}`} opacity={0.35 + i * 0.25} />)}</>
@@ -17,9 +24,14 @@ function ProjectMark({ project }: { project: Project }) {
 
 export const sectionId = (project: Project, index: number) => `${project.id}-section-${index + 1}`;
 
+function Figure({ image, alt }: { image?: string; alt?: string }) {
+  return image ? <figure className="detail-figure"><img src={sitePath(image)} alt={alt || ""} loading="lazy" /><figcaption>{alt}</figcaption></figure> : null;
+}
+
 export function ProjectSections({ project }: { project: Project }) {
   return <>{project.sections.map((section, i) => <section className="detail-section" id={sectionId(project, i)} key={i} tabIndex={-1} data-reading-section={i}>
-    <h3><span className="num">{String(i + 1).padStart(2, "0")}</span>{section.title}</h3><div className="detail-section-body"><p>{section.body}</p>{section.image && <figure className="detail-figure"><img src={sitePath(section.image)} alt={section.imageAlt || ""} loading="lazy" /><figcaption>{section.imageAlt}</figcaption></figure>}</div>
+    <h3><span className="num">{String(i + 1).padStart(2, "0")}</span>{section.title}</h3><div className="detail-section-body"><p>{section.body}</p><Figure image={section.image} alt={section.imageAlt} />
+      {section.subsections?.map((sub, j) => <div className="detail-subsection" key={j}><h4><span className="num">{String(i + 1).padStart(2, "0")}-{j + 1}</span>{sub.title}</h4><p>{sub.body}</p><Figure image={sub.image} alt={sub.imageAlt} /></div>)}</div>
   </section>)}</>;
 }
 

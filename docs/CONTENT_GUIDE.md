@@ -62,9 +62,9 @@
 | `links` | 공개 저장소·시연·문서 링크. 없으면 `[]` |
 | `image` | 이미지가 없으면 `""`. 있으면 `/images/my-project.png` 형식 |
 | `imageAlt` | 이미지 설명. 이미지가 있으면 필수 |
-| `art` | `orbit`, `layers`, `flow`, `quantization`, `none` 중 하나 |
+| `art` | `orbit`, `layers`, `flow`, `nand`, `quantization`, `none` 중 하나. `nand`는 LBA 0~99 10×10 칸에 쓰기·읽기 비교·PASS 순서를 보여 주는 그래픽 |
 | `artLabels` | 장식 주변의 짧은 라벨 3개. 근거 없는 성능 수치를 넣지 않음 |
-| `sections` | 만든 과정. `{ "title": "제목", "body": "내용" }`의 목록. 섹션 본문 아래에 그림을 붙이려면 `"image": "/images/파일명.png"`와 `"imageAlt": "그림 설명"`을 함께 넣는다(선택) |
+| `sections` | 만든 과정. `{ "title": "제목", "body": "내용" }`의 목록. 섹션 본문 아래에 그림을 붙이려면 `"image": "/images/파일명.png"`와 `"imageAlt": "그림 설명"`을 함께 넣는다(선택). 한 섹션 아래 하위 항목을 두려면 `"subsections": [{ "title", "body", "image"?, "imageAlt"? }]`를 넣는다. 목차에는 상위 섹션만 표시된다(선택) |
 
 이미지를 쓰려면 파일을 `public/images/` 안에 넣고 `/images/파일명.png`로 참조한다. 파일 이름은 영문·숫자·하이픈·밑줄을 사용한다. 하위 폴더도 허용한다. png, jpg, jpeg, webp, gif, svg를 지원한다. 이미지가 있으면 추상 그림 대신 표시한다. 외부 파일은 공개 권한과 출처를 확인한다.
 

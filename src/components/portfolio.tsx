@@ -8,11 +8,11 @@ import { ProjectArt } from "./project-art";
 import { ProjectDetail, ProjectSections } from "./project-detail";
 import { useReadingChrome } from "@/lib/use-reading-chrome";
 
-function Links({ links }: { links: PublicLink[] }) {
-  return <div className="public-links">{links.map((link) => <a key={link.url} href={link.url} {...(link.url.startsWith("https:") ? { target: "_blank", rel: "noopener noreferrer" } : {})}>{link.label} <span aria-hidden="true">↗</span></a>)}</div>;
+function Links({ links, button = false }: { links: PublicLink[]; button?: boolean }) {
+  return <div className={button ? "public-links link-buttons" : "public-links"}>{links.map((link) => <a key={link.url} href={link.url} {...(link.url.startsWith("https:") ? { target: "_blank", rel: "noopener noreferrer" } : {})}>{link.label} <span aria-hidden="true">↗</span></a>)}</div>;
 }
 function ProjectMetadata({ project }: { project: Project }) {
-  return <div className="detail-meta"><p>{project.role}</p><ul className="tags">{project.stack.map((name) => <li key={name}>{name}</li>)}</ul><Links links={project.links} /></div>;
+  return <div className="detail-meta"><p><span className="role-label">내가 맡은 역할</span>{project.role}</p><ul className="tags">{project.stack.map((name) => <li key={name}>{name}</li>)}</ul><Links links={project.links} button /></div>;
 }
 export function ProjectBody({ project }: { project: Project }) {
   return <div className="project-body"><ProjectMetadata project={project} /><ProjectSections project={project} /></div>;
@@ -70,9 +70,9 @@ export function Portfolio({ data }: { data: PortfolioData }) {
             <div className="stage-heading"><h2 className="stage-title"><Accent text={project.title} accent={project.accent} /></h2>
               <a className="stage-go" href={sitePath(`/projects/${project.id}/`)} onClick={(e) => choose(e, `project/${project.id}/details`)}>만든 과정 보기 <span aria-hidden="true">→</span></a>
             </div>
-            <p className="stage-summary">{project.summary}</p><p className="stage-role">{project.role}</p>
+            <p className="stage-summary">{project.summary}</p><p className="stage-role"><span className="role-label">내가 맡은 역할</span>{project.role}</p>
           </header>
-          <ProjectArt project={project} /><footer className="stage-foot"><ul className="tags">{project.stack.map((name) => <li key={name}>{name}</li>)}</ul><Links links={project.links} /></footer>
+          <ProjectArt project={project} /><footer className="stage-foot"><ul className="tags">{project.stack.map((name) => <li key={name}>{name}</li>)}</ul><Links links={project.links} button /></footer>
         </> : selected === "skills" ? <section className="text-page"><p className="eyebrow">TOOLS & PRACTICE</p><h2>기술 스택</h2><p className="page-intro">직접 사용한 기술과, 그 기술로 해 본 일입니다.</p>{data.skills.length ? <div className="skills-grid">{data.skills.map((skill) => <article key={skill.name}><h3>{skill.name}</h3><p>{skill.usage}</p></article>)}</div> : <p className="empty-state">아직 등록한 기술이 없습니다.</p>}</section>
         : selected === "writing" ? <section className="text-page"><p className="eyebrow">NOTES & QUESTIONS</p><h2>글과 기록</h2><p className="page-intro">만들면서 만난 문제와 그 문제를 풀어 간 기록입니다.</p>{data.writing.length ? <div className="writing-list">{data.writing.map((post) => <article key={post.url}><a href={post.url} target="_blank" rel="noopener noreferrer"><h3>{post.title} ↗</h3><p>{post.summary}</p></a></article>)}</div> : <p className="empty-state">아직 등록한 글이 없습니다.</p>}</section>
         : <section className="text-page"><p className="eyebrow">ABOUT ME</p><h2>{profile.name}</h2><p className="about-intro">{profile.intro}</p><Links links={profile.links} />

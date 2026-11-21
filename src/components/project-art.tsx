@@ -19,6 +19,32 @@ export function ProjectArt({ project }: { project: Project }) {
       const perspective = 3.6 / (3.6 + depth);
       put(w / 2 + xx * scale * perspective, h / 2 + yy * scale * perspective, size * perspective, light * (dark ? 2.5 : 1) * (0.7 + (1 - depth) * 0.15));
     };
+    if (project.art === "nand") {
+      // nand.txt as LBA 0~99 on a 10x10 plane: testapp1 writes every cell in order, reads each back to compare, then holds PASS.
+      const cycle = t % 10000, px = pointer.current.x, py = pointer.current.y;
+      const yaw = -0.62 + px * 0.25, pitch = 0.95 + py * 0.15, s = Math.min(w * 0.36, h * 0.5);
+      const project3 = (x: number, z: number) => {
+        const xx = x * Math.cos(yaw) - z * Math.sin(yaw), zz = x * Math.sin(yaw) + z * Math.cos(yaw);
+        const yy = zz * Math.cos(pitch), depth = zz * Math.sin(pitch), k = 3.2 / (3.2 + depth);
+        return [w / 2 + xx * s * k, h * 0.56 + yy * s * k, k] as const;
+      };
+      const pulse = (dt: number) => (dt < 0 ? 0 : Math.exp(-dt / 260));
+      for (let lba = 0; lba < 100; lba++) {
+        const row = Math.floor(lba / 10), col = lba % 10;
+        const written = 300 + lba * 40, checked = 4900 + lba * 30;
+        let light = 0.06;
+        if (cycle >= written) light = 0.3 + 0.7 * pulse(cycle - written);
+        if (cycle >= checked) light = 0.55 + 0.45 * pulse(cycle - checked);
+        if (cycle >= 8200) light = 0.6 + 0.12 * Math.sin((cycle - 8200) * 0.006);
+        if (cycle >= 9300) light = 0.06 + 0.6 * (1 - (cycle - 9300) / 700);
+        for (let i = 0; i < 5; i++) for (let j = 0; j < 5; j++) {
+          const x = (col - 4.5) * 0.17 + (i - 2) * 0.026, z = (row - 4.5) * 0.17 + (j - 2) * 0.026;
+          const [sx, sy, k] = project3(x, z);
+          put(sx, sy, 4.2 * k, light * (dark ? 2.6 : 1.15));
+        }
+      }
+      return;
+    }
     if (project.art === "orbit") {
       for (let ring = 0; ring < 9; ring++) for (let i = 0; i < 210; i++) {
         const a = i / 210 * Math.PI * 2, r = 0.85 + ring * 0.016;
@@ -44,10 +70,10 @@ export function ProjectArt({ project }: { project: Project }) {
   if (project.art === "quantization") return <QuantizationArt />;
   if (project.art === "none") return <div className="art-blank" aria-hidden="true"><span>{project.name}</span></div>;
   return <figure className="art-study" onPointerMove={(e) => { const b = e.currentTarget.getBoundingClientRect(); pointer.current = { x: (e.clientX - b.left) / b.width - 0.5, y: (e.clientY - b.top) / b.height - 0.5 }; }} onPointerLeave={() => { pointer.current = { x: 0, y: 0 }; }}>
-    <LightField scene={scene} label={`${project.name}의 추상 장식 그림`} still={3600}>
+    <LightField scene={scene} label={`${project.name}의 추상 장식 그림`} still={project.art === "nand" ? 6200 : 3600}>
       <div className={`art-fallback art-fallback-${project.art}`} aria-hidden="true"><i /><i /><i /></div>
       {project.artLabels.map((label, i) => <span className="art-label" key={i} style={{ "--i": i } as CSSProperties}><b className="num">{String(i + 1).padStart(2, "0")}</b>{label}</span>)}
     </LightField>
-    <figcaption><span className="num">{project.art.toUpperCase()} / ABSTRACT STUDY</span><span>장식용 추상 그래픽</span></figcaption>
+    {project.art === "nand" ? <figcaption><span className="num">NAND.TXT / LBA 0–99</span><span>testapp1: 전체 쓰기 → 읽어서 비교 → PASS</span></figcaption> : <figcaption><span className="num">{project.art.toUpperCase()} / ABSTRACT STUDY</span><span>장식용 추상 그래픽</span></figcaption>}
   </figure>;
 }
