@@ -46,42 +46,55 @@ export function ProjectArt({ project }: { project: Project }) {
       return;
     }
     if (project.art === "signal") {
-      // Logic analyzer view, newest sample at the right: SIGRTMIN command pulses, main-loop kicks, and the watchdog counter.
-      // The hang command stops the kicks, the counter climbs to the timeout, a reset marker drops and the kicks start again.
-      const T = 12000, span = 7000 * Math.min(1, Math.max(0.5, w / 900)), x0 = w * 0.05, x1 = w * 0.97, step = 3.5;
-      const sends = [500, 1400, 2300, 4100, 5900, 7400], hangAt = 7600, resetAt = 9600, backAt = 10000, timeout = resetAt - hangAt;
-      const L = (v: number) => v * (dark ? 2.4 : 1.9);
-      const phase = (tau: number) => ((tau % T) + T) % T;
-      const alive = (f: number) => f < hangAt || f >= backAt;
-      const sig = (f: number) => (sends.some((at) => f >= at && f < at + 170) ? 1 : 0);
-      const kick = (f: number) => (alive(f) && f % 400 < 70 ? 1 : 0);
-      const wdt = (f: number) => (f >= hangAt && f < resetAt ? (f - hangAt + 30) / timeout : f >= resetAt && f < backAt ? 0 : (f % 400) / timeout);
-      const lanes = [{ fn: sig, digital: true }, { fn: kick, digital: true }, { fn: wdt, digital: false }];
-      const amp = h * 0.11;
-      const timeAt = (x: number) => t - (1 - (x - x0) / (x1 - x0)) * span;
-      const xAt = (tau: number) => x0 + (1 - (t - tau) / span) * (x1 - x0);
-      // faint time grid, one division per second, scrolling with the trace
-      for (let g = Math.ceil((t - span) / 1000) * 1000; g <= t; g += 1000) { const gx = xAt(g); for (let y = h * 0.12; y < h * 0.9; y += 7) put(gx, y, 2, L(0.045)); }
-      lanes.forEach(({ fn, digital }, i) => {
-        const base = h * (0.33 + i * 0.25);
-        if (!digital) for (let x = x0; x <= x1; x += 7) put(x, base - amp, 2.2, L(0.14)); // timeout threshold
-        let prev = -1;
-        for (let x = x0; x <= x1; x += step) {
-          const f = phase(timeAt(x)), v = Math.min(1, fn(f)), y = base - v * amp;
-          const fresh = Math.exp(-(x1 - x) / (w * 0.04));
-          const light = (digital ? 0.32 + 0.6 * v : 0.36 + 0.5 * v) + 0.6 * fresh;
-          if (prev >= 0 && Math.abs(prev - y) > step) { const lo = Math.min(prev, y), hi = Math.max(prev, y); for (let yy = lo + step; yy < hi; yy += step) put(x, yy, 3, L(light * 0.85)); }
-          put(x, y, 3.4, L(light));
-          prev = y;
-        }
-      });
-      // reset marker across every lane where the counter hits the timeout
-      for (let k = Math.floor((t - span) / T); k <= Math.floor(t / T); k++) {
-        const at = k * T + resetAt, rx = xAt(at);
-        if (rx < x0 || rx > x1) continue;
-        const flash = Math.exp(-Math.max(0, t - at) / 700);
-        for (let y = h * 0.1; y < h * 0.9; y += 5) put(rx, y, 3, L(0.35 + 1.1 * flash));
+      // Miner threads in a circular queue (front, size), drawn as 12 representative slots of the 100-slot queue.
+      // add: pthread_create, then the thread enters at rear. del: the front thread is cancelled and joined first, then front moves.
+      const N = 12, gap = 650, T = 17000, c = t % T, px = pointer.current.x, py = pointer.current.y;
+      const order = "aaaaaddaaaddaaaadddddddd";
+      const slots = Array.from({ length: N }, () => ({ born: -1, del: -1 }));
+      let front = 0, size = 0, frontFrom = 0, frontAt = -1e9, rearFrom = 0, rearAt = -1e9;
+      for (let e = 0; e < order.length; e++) {
+        const at = 300 + e * gap;
+        if (at > c) break;
+        if (order[e] === "a") { const k = (front + size) % N; rearFrom = front + size; rearAt = at; slots[k] = { born: at, del: -1 }; size++; }
+        else { slots[front].del = at; frontFrom = front; frontAt = at + 450; front = (front + 1) % N; size--; }
       }
+      const ease = (u: number) => { const v = Math.min(1, Math.max(0, u)); return v * v * (3 - 2 * v); };
+      const frontPos = frontFrom + ease((c - frontAt) / 200) * (((front - frontFrom) % N + N) % N);
+      const rearPos = rearFrom + ease((c - rearAt) / 250);
+      const narrow = w < 640;
+      const cx = narrow ? w * 0.5 : w * 0.6, cy = narrow ? h * 0.7 : h * 0.55, R = Math.min(narrow ? w * 0.3 : w * 0.3, h * 0.44);
+      const yaw = px * 0.35, pitch = 0.62 + py * 0.15;
+      const P = (ang: number, r: number, y: number, size2: number, light: number) => {
+        const x = Math.cos(ang) * r, z = Math.sin(ang) * r;
+        const xx = x * Math.cos(yaw) - z * Math.sin(yaw), zz = x * Math.sin(yaw) + z * Math.cos(yaw);
+        const sy = zz * Math.cos(pitch) - y * Math.sin(pitch), depth = zz * Math.sin(pitch) + y * Math.cos(pitch), k = 3.4 / (3.4 + depth);
+        put(cx + xx * R * k, cy + sy * R * k, size2 * k, light * (dark ? 2.5 : 2));
+      };
+      const angle = (k: number) => -Math.PI / 2 + (k / N) * Math.PI * 2;
+      let active = 0;
+      for (let k = 0; k < N; k++) {
+        const { born, del } = slots[k];
+        let light = 0.14, lift = 0;
+        if (born >= 0 && born <= c) {
+          const grow = ease((c - born) / 250), flash = Math.exp(-(c - born) / 350);
+          light = 0.14 + grow * (0.45 + 0.12 * Math.sin(c * 0.011 + k * 1.7)) + 0.9 * flash; lift = 0.06 * flash; active++;
+          if (del >= 0 && c >= del) {
+            const d = c - del; active--;
+            light = d < 250 ? 1.4 + 0.4 * Math.sin(d * 0.08) : 0.14 + 1.2 * Math.max(0, 1 - (d - 250) / 250);
+          }
+        }
+        const a0 = angle(k);
+        for (let i = 0; i < 6; i++) for (let j = 0; j < 4; j++) {
+          const ang = a0 + ((i - 2.5) / 6) * (Math.PI * 2 / N) * 0.78, r = 0.8 + j * 0.07;
+          P(ang, r, lift, 3.6, light * (j === 0 || j === 3 ? 0.85 : 1));
+        }
+      }
+      // front (del) and rear (add) pointers outside the ring
+      const tick = (pos: number, r0: number, light: number) => { for (let i = 0; i < 7; i++) for (const o of [-0.035, 0, 0.035]) P(angle(pos) + o * (1 - i / 7), r0 + i * 0.045, 0, 3.8, light * (1 - i * 0.08)); };
+      tick(frontPos, 1.12, 1.1);
+      for (let i = 0; i < 4; i++) P(angle(rearPos), 1.12 + i * 0.045, 0, 2.6, 0.4);
+      // shared coin counter: each running miner adds a coin every 0.1 s
+      for (let i = 0; i < 90; i++) { const a = i * 2.39996, r = Math.sqrt(i / 90) * 0.3; P(a, r, 0, 3, 0.1 + Math.min(1, active / 8) * 0.45 * (0.5 + 0.5 * Math.sin(c * 0.02 - i * 0.5))); }
       return;
     }
     if (project.art === "orbit") {
@@ -109,10 +122,10 @@ export function ProjectArt({ project }: { project: Project }) {
   if (project.art === "quantization") return <QuantizationArt />;
   if (project.art === "none") return <div className="art-blank" aria-hidden="true"><span>{project.name}</span></div>;
   return <figure className={`art-study art-study-${project.art}`} onPointerMove={(e) => { const b = e.currentTarget.getBoundingClientRect(); pointer.current = { x: (e.clientX - b.left) / b.width - 0.5, y: (e.clientY - b.top) / b.height - 0.5 }; }} onPointerLeave={() => { pointer.current = { x: 0, y: 0 }; }}>
-    <LightField scene={scene} label={`${project.name}의 추상 장식 그림`} still={project.art === "nand" ? 6200 : project.art === "signal" ? 11000 : 3600}>
+    <LightField scene={scene} label={`${project.name}의 추상 장식 그림`} still={project.art === "nand" ? 6200 : project.art === "signal" ? 9900 : 3600}>
       <div className={`art-fallback art-fallback-${project.art}`} aria-hidden="true"><i /><i /><i /></div>
       {project.artLabels.map((label, i) => <span className="art-label" key={i} style={{ "--i": i } as CSSProperties}><b className="num">{String(i + 1).padStart(2, "0")}</b>{label}</span>)}
     </LightField>
-    {project.art === "signal" ? <figcaption><span className="num">LOGIC ANALYZER / 3 CH</span><span>hang 명령 → kick 중단 → 워치독 타임아웃 → 재시작</span></figcaption> : project.art === "nand" ? <figcaption><span className="num">NAND.TXT / LBA 0–99</span><span>testapp1: 전체 쓰기 → 읽어서 비교 → PASS</span></figcaption> : <figcaption><span className="num">{project.art.toUpperCase()} / ABSTRACT STUDY</span><span>장식용 추상 그래픽</span></figcaption>}
+    {project.art === "signal" ? <figcaption><span className="num">CIRCULAR QUEUE / FRONT · REAR</span><span>add → rear에 넣기, del → front 채굴기 cancel·join 뒤 front 이동</span></figcaption> : project.art === "nand" ? <figcaption><span className="num">NAND.TXT / LBA 0–99</span><span>testapp1: 전체 쓰기 → 읽어서 비교 → PASS</span></figcaption> : <figcaption><span className="num">{project.art.toUpperCase()} / ABSTRACT STUDY</span><span>장식용 추상 그래픽</span></figcaption>}
   </figure>;
 }

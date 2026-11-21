@@ -8,12 +8,12 @@ import { QuantizationMark } from "./quantization-mark";
 function ProjectMark({ project }: { project: Project }) {
   if (project.image) return <img src={sitePath(project.image)} alt="" />;
   if (project.art === "quantization") return <QuantizationMark />;
-  if (project.art === "signal") return <svg className="signal-mark" viewBox="0 0 132 64" role="img" aria-label="로직 애널라이저처럼 그린 시그널, kick, 워치독 카운터. kick이 멈추면 카운터가 타임아웃까지 올라 재시작">
-    <path d="M2 16H12V8H16V16H30V8H34V16H58V8H62V16H130" fill="none" stroke="currentColor" strokeWidth="1.3" />
-    <path d={`M2 36${Array.from({ length: 8 }, (_, k) => `H${6 + k * 8}V30H${8 + k * 8}V36`).join("")}H104V30H106V36H112V30H114V36H120V30H122V36H130`} fill="none" stroke="currentColor" strokeWidth="1.3" />
-    <path d="M2 46H130" fill="none" stroke="currentColor" strokeWidth="0.8" strokeDasharray="1.5 2.5" opacity=".45" />
-    <path d={`M2 58${Array.from({ length: 8 }, (_, k) => `L${8 + k * 8} 55V58`).join("")}L96 46V58H130`} fill="none" stroke="var(--signal)" strokeWidth="1.4" />
-    <path d="M96 3V62" stroke="var(--signal)" strokeWidth="1.1" strokeDasharray="2 2" />
+  if (project.art === "signal") return <svg className="signal-mark" viewBox="0 0 132 64" role="img" aria-label="채굴기 스레드를 넣고 빼는 원형 큐. rear에 넣고 front부터 뺀다">
+    {Array.from({ length: 12 }, (_, k) => { const a = -90 + k * 30; const on = k >= 2 && k <= 7; return <rect key={k} x="-4.5" y="-27" width="9" height="8" rx="1.2" transform={`translate(32 32) rotate(${a + 90})`} fill={on ? "var(--signal)" : "none"} stroke={on ? "none" : "currentColor"} strokeWidth="0.8" opacity={on ? 0.9 : 0.4} />; })}
+    <path d="M32 32m-5 0a5 5 0 1 0 10 0a5 5 0 1 0 -10 0" fill="currentColor" opacity=".35" />
+    <text x="70" y="22" fontSize="8" fill="var(--signal)" fontWeight="700" fontFamily="var(--font-mono), monospace">front → del</text>
+    <text x="70" y="36" fontSize="8" fill="currentColor" opacity=".7" fontFamily="var(--font-mono), monospace">rear ← add</text>
+    <text x="70" y="50" fontSize="7" fill="currentColor" opacity=".5" fontFamily="var(--font-mono), monospace">queue[100]</text>
   </svg>;
   if (project.art === "nand") return <svg className="nand-mark" viewBox="0 0 132 64" role="img" aria-label="nand.txt의 LBA 0~99 100칸을 모두 쓰고 읽어 비교해 PASS">
     {Array.from({ length: 100 }, (_, k) => <rect key={k} x={2 + (k % 10) * 6} y={2 + Math.floor(k / 10) * 6} width="5" height="5" rx="0.6" fill="var(--signal)" opacity={0.35 + 0.65 * ((k % 10) + Math.floor(k / 10)) / 18} />)}
