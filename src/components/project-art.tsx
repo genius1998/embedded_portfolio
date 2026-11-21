@@ -46,40 +46,42 @@ export function ProjectArt({ project }: { project: Project }) {
       return;
     }
     if (project.art === "signal") {
-      // User App -> signals -> main loop (kicks the watchdog) -> miner threads; a hang stops the kicks and the watchdog resets.
-      const T = 14000, c = t % T, s = Math.min(w / 2.9, h / 1.55), ox = w / 2 + pointer.current.x * 12, oy = h * 0.54 + pointer.current.y * 8;
-      const P = (x: number, y: number, size: number, light: number) => put(ox + x * s, oy + y * s, size, light * (dark ? 2.4 : 1.1));
-      const pulse = (dt: number, k = 300) => (dt < 0 ? 0 : Math.exp(-dt / k));
-      const hangAt = 9000, resetAt = 11600;
-      const sends = [800, 1700, 2600, 4400, 6200, 8400];
-      // User App node
-      const sendGlow = sends.reduce((g, at) => g + pulse(c - at, 250), 0);
-      for (let i = 0; i < 140; i++) { const a = i * 2.39996, r = Math.sqrt(i / 140) * 0.14; P(-1.25 + r * Math.cos(a), r * Math.sin(a), 3.8, 0.5 + 0.6 * sendGlow); }
-      // signal line and travelling pulses (add, add, add, del, show, hang)
-      for (let i = 0; i <= 50; i++) { const x = -1.1 + i / 50 * 0.88; let light = 0.12; for (const at of sends) { const head = -1.1 + (c - at) / 700 * 0.88; const d = Math.abs(x - head); if (c > at && c < at + 900) light += 1.5 * Math.exp(-d * d / 0.004); } P(x, 0, 3.4, light); }
-      // main loop ring; kicks pulse until the hang, then go dark until reset
-      const alive = c < hangAt || c > resetAt;
-      const kick = alive ? pulse((c % 500), 160) : 0;
-      const resetFlash = pulse(c - resetAt, 500);
-      for (let i = 0; i < 90; i++) { const a = i / 90 * Math.PI * 2; P(0.18 * Math.cos(a), 0.18 * Math.sin(a), 4, (alive ? 0.45 : 0.12) + 0.6 * kick + 1.2 * resetFlash); }
-      // watchdog ring, dim normally, brightening while kicks are missing
-      const starving = c > hangAt && c < resetAt ? (c - hangAt) / (resetAt - hangAt) : 0;
-      for (let i = 0; i < 140; i++) { const a = i / 140 * Math.PI * 2; P(0.34 * Math.cos(a), 0.34 * Math.sin(a), 3, 0.12 + 0.9 * starving * (0.6 + 0.4 * Math.sin(c * 0.02)) + 0.9 * resetFlash); }
-      // miner threads: 1 at boot, +3 adds, oldest removed by del, back to 1 after reset
-      const born = [-1, 1700 + 700, 2600 + 700, 3500 + 700];
-      const delAt = 4400 + 700;
-      for (let m = 0; m < born.length; m++) {
-        let on = c >= born[m] ? Math.min(1, (c - born[m]) / 300) : 0;
-        if (m === 0 && c > delAt) on = Math.max(0, 1 - (c - delAt) / 400);
-        if (m > 0 && c > resetAt) on = 0;
-        if (m === 0 && c > resetAt) on = Math.min(1, (c - resetAt) / 400);
-        if (on <= 0) continue;
-        const cx = 0.62 + (m % 2) * 0.32, cy = -0.22 + Math.floor(m / 2) * 0.44;
-        const work = alive || m === 0 ? 0.5 + 0.5 * Math.sin(c * 0.012 + m) : 0.4;
-        for (let i = 0; i < 6; i++) for (let j = 0; j < 6; j++) P(cx + (i - 2.5) * 0.034, cy + (j - 2.5) * 0.034, 3.8, on * (0.4 + 0.5 * work * ((i + j + Math.floor(c / 100)) % 5 === 0 ? 1 : 0.35)));
+      // Logic analyzer view, newest sample at the right: SIGRTMIN command pulses, main-loop kicks, and the watchdog counter.
+      // The hang command stops the kicks, the counter climbs to the timeout, a reset marker drops and the kicks start again.
+      const T = 12000, span = 7000 * Math.min(1, Math.max(0.5, w / 900)), x0 = w * 0.05, x1 = w * 0.97, step = 3.5;
+      const sends = [500, 1400, 2300, 4100, 5900, 7400], hangAt = 7600, resetAt = 9600, backAt = 10000, timeout = resetAt - hangAt;
+      const L = (v: number) => v * (dark ? 2.4 : 1.9);
+      const phase = (tau: number) => ((tau % T) + T) % T;
+      const alive = (f: number) => f < hangAt || f >= backAt;
+      const sig = (f: number) => (sends.some((at) => f >= at && f < at + 170) ? 1 : 0);
+      const kick = (f: number) => (alive(f) && f % 400 < 70 ? 1 : 0);
+      const wdt = (f: number) => (f >= hangAt && f < resetAt ? (f - hangAt + 30) / timeout : f >= resetAt && f < backAt ? 0 : (f % 400) / timeout);
+      const lanes = [{ fn: sig, digital: true }, { fn: kick, digital: true }, { fn: wdt, digital: false }];
+      const amp = h * 0.11;
+      const timeAt = (x: number) => t - (1 - (x - x0) / (x1 - x0)) * span;
+      const xAt = (tau: number) => x0 + (1 - (t - tau) / span) * (x1 - x0);
+      // faint time grid, one division per second, scrolling with the trace
+      for (let g = Math.ceil((t - span) / 1000) * 1000; g <= t; g += 1000) { const gx = xAt(g); for (let y = h * 0.12; y < h * 0.9; y += 7) put(gx, y, 2, L(0.045)); }
+      lanes.forEach(({ fn, digital }, i) => {
+        const base = h * (0.33 + i * 0.25);
+        if (!digital) for (let x = x0; x <= x1; x += 7) put(x, base - amp, 2.2, L(0.14)); // timeout threshold
+        let prev = -1;
+        for (let x = x0; x <= x1; x += step) {
+          const f = phase(timeAt(x)), v = Math.min(1, fn(f)), y = base - v * amp;
+          const fresh = Math.exp(-(x1 - x) / (w * 0.04));
+          const light = (digital ? 0.32 + 0.6 * v : 0.36 + 0.5 * v) + 0.6 * fresh;
+          if (prev >= 0 && Math.abs(prev - y) > step) { const lo = Math.min(prev, y), hi = Math.max(prev, y); for (let yy = lo + step; yy < hi; yy += step) put(x, yy, 3, L(light * 0.85)); }
+          put(x, y, 3.4, L(light));
+          prev = y;
+        }
+      });
+      // reset marker across every lane where the counter hits the timeout
+      for (let k = Math.floor((t - span) / T); k <= Math.floor(t / T); k++) {
+        const at = k * T + resetAt, rx = xAt(at);
+        if (rx < x0 || rx > x1) continue;
+        const flash = Math.exp(-Math.max(0, t - at) / 700);
+        for (let y = h * 0.1; y < h * 0.9; y += 5) put(rx, y, 3, L(0.35 + 1.1 * flash));
       }
-      // main loop -> miners connector
-      for (let i = 0; i <= 20; i++) P(0.36 + i / 20 * 0.2, 0, 3, 0.15);
       return;
     }
     if (project.art === "orbit") {
@@ -106,11 +108,11 @@ export function ProjectArt({ project }: { project: Project }) {
   if (project.image) return <figure className="project-image"><img src={sitePath(project.image)} alt={project.imageAlt} /><figcaption>{project.imageAlt}</figcaption></figure>;
   if (project.art === "quantization") return <QuantizationArt />;
   if (project.art === "none") return <div className="art-blank" aria-hidden="true"><span>{project.name}</span></div>;
-  return <figure className="art-study" onPointerMove={(e) => { const b = e.currentTarget.getBoundingClientRect(); pointer.current = { x: (e.clientX - b.left) / b.width - 0.5, y: (e.clientY - b.top) / b.height - 0.5 }; }} onPointerLeave={() => { pointer.current = { x: 0, y: 0 }; }}>
-    <LightField scene={scene} label={`${project.name}의 추상 장식 그림`} still={project.art === "nand" ? 6200 : project.art === "signal" ? 10500 : 3600}>
+  return <figure className={`art-study art-study-${project.art}`} onPointerMove={(e) => { const b = e.currentTarget.getBoundingClientRect(); pointer.current = { x: (e.clientX - b.left) / b.width - 0.5, y: (e.clientY - b.top) / b.height - 0.5 }; }} onPointerLeave={() => { pointer.current = { x: 0, y: 0 }; }}>
+    <LightField scene={scene} label={`${project.name}의 추상 장식 그림`} still={project.art === "nand" ? 6200 : project.art === "signal" ? 11000 : 3600}>
       <div className={`art-fallback art-fallback-${project.art}`} aria-hidden="true"><i /><i /><i /></div>
       {project.artLabels.map((label, i) => <span className="art-label" key={i} style={{ "--i": i } as CSSProperties}><b className="num">{String(i + 1).padStart(2, "0")}</b>{label}</span>)}
     </LightField>
-    {project.art === "signal" ? <figcaption><span className="num">SIGNAL / THREADS / WATCHDOG</span><span>add·del 시그널 → 채굴기 스레드 증감, hang → 워치독 재시작</span></figcaption> : project.art === "nand" ? <figcaption><span className="num">NAND.TXT / LBA 0–99</span><span>testapp1: 전체 쓰기 → 읽어서 비교 → PASS</span></figcaption> : <figcaption><span className="num">{project.art.toUpperCase()} / ABSTRACT STUDY</span><span>장식용 추상 그래픽</span></figcaption>}
+    {project.art === "signal" ? <figcaption><span className="num">LOGIC ANALYZER / 3 CH</span><span>hang 명령 → kick 중단 → 워치독 타임아웃 → 재시작</span></figcaption> : project.art === "nand" ? <figcaption><span className="num">NAND.TXT / LBA 0–99</span><span>testapp1: 전체 쓰기 → 읽어서 비교 → PASS</span></figcaption> : <figcaption><span className="num">{project.art.toUpperCase()} / ABSTRACT STUDY</span><span>장식용 추상 그래픽</span></figcaption>}
   </figure>;
 }

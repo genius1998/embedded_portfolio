@@ -136,9 +136,9 @@
       "imageAlt": "",
       "art": "signal",
       "artLabels": [
-        "User App · sigqueue",
-        "main loop · kick",
-        "Watchdog · reset"
+        "SIGRTMIN · 명령",
+        "KICK · main loop",
+        "WDT · 타임아웃 → 재시작"
       ],
       "sections": [
         {

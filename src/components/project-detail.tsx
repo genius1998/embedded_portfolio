@@ -8,14 +8,12 @@ import { QuantizationMark } from "./quantization-mark";
 function ProjectMark({ project }: { project: Project }) {
   if (project.image) return <img src={sitePath(project.image)} alt="" />;
   if (project.art === "quantization") return <QuantizationMark />;
-  if (project.art === "signal") return <svg viewBox="0 0 132 64" role="img" aria-label="User App의 시그널이 메인 루프로 들어가 채굴기 스레드를 늘리고, 워치독이 메인 루프를 감시">
-    <circle cx="10" cy="32" r="6" fill="currentColor" opacity=".55" />
-    <path d="M18 32H44" stroke="currentColor" strokeWidth="1.2" strokeDasharray="3 3" opacity=".6" />
-    <circle cx="30" cy="32" r="2.4" fill="var(--signal)" />
-    <circle cx="58" cy="32" r="9" fill="none" stroke="currentColor" strokeWidth="1.6" />
-    <circle cx="58" cy="32" r="16" fill="none" stroke="var(--signal)" strokeWidth="1.2" strokeDasharray="2 3" />
-    <path d="M75 32H86" stroke="currentColor" strokeWidth="1.2" opacity=".6" />
-    {[0, 1, 2, 3].map((k) => <rect key={k} x={90 + (k % 2) * 18} y={16 + Math.floor(k / 2) * 18} width="13" height="13" rx="1.5" fill="var(--signal)" opacity={k === 0 ? 0.35 : 0.9} />)}
+  if (project.art === "signal") return <svg className="signal-mark" viewBox="0 0 132 64" role="img" aria-label="로직 애널라이저처럼 그린 시그널, kick, 워치독 카운터. kick이 멈추면 카운터가 타임아웃까지 올라 재시작">
+    <path d="M2 16H12V8H16V16H30V8H34V16H58V8H62V16H130" fill="none" stroke="currentColor" strokeWidth="1.3" />
+    <path d={`M2 36${Array.from({ length: 8 }, (_, k) => `H${6 + k * 8}V30H${8 + k * 8}V36`).join("")}H104V30H106V36H112V30H114V36H120V30H122V36H130`} fill="none" stroke="currentColor" strokeWidth="1.3" />
+    <path d="M2 46H130" fill="none" stroke="currentColor" strokeWidth="0.8" strokeDasharray="1.5 2.5" opacity=".45" />
+    <path d={`M2 58${Array.from({ length: 8 }, (_, k) => `L${8 + k * 8} 55V58`).join("")}L96 46V58H130`} fill="none" stroke="var(--signal)" strokeWidth="1.4" />
+    <path d="M96 3V62" stroke="var(--signal)" strokeWidth="1.1" strokeDasharray="2 2" />
   </svg>;
   if (project.art === "nand") return <svg className="nand-mark" viewBox="0 0 132 64" role="img" aria-label="nand.txt의 LBA 0~99 100칸을 모두 쓰고 읽어 비교해 PASS">
     {Array.from({ length: 100 }, (_, k) => <rect key={k} x={2 + (k % 10) * 6} y={2 + Math.floor(k / 10) * 6} width="5" height="5" rx="0.6" fill="var(--signal)" opacity={0.35 + 0.65 * ((k % 10) + Math.floor(k / 10)) / 18} />)}
