@@ -253,7 +253,12 @@
         "ONNX Runtime",
         "Python"
       ],
-      "links": [],
+      "links": [
+        {
+          "label": "GitHub 저장소",
+          "url": "https://github.com/genius1998/rpi-yolo-edge-ai"
+        }
+      ],
       "image": "/images/others/rpi-yolo/thumb.webp",
       "imageAlt": "Raspberry Pi 5 카메라 화면에서 게임패드를 game pad 0.95로 찾은 장면",
       "sections": [
@@ -263,13 +268,13 @@
         },
         {
           "title": "결과",
-          "body": "Raspberry Pi 5에서 카메라를 움직이며 14초 동안 추론한 영상입니다. 게임패드가 화면에 들어오면 game pad 박스와 신뢰도가 표시됩니다. 아래는 그 영상의 앞 10초입니다.",
+          "body": "Raspberry Pi 5에서 카메라를 움직이며 14초 동안 추론한 영상이고, 아래는 그 앞 10초입니다. 게임패드가 화면 가운데에 크게 잡히면 game pad 박스와 신뢰도가 표시됩니다. 게임패드가 가장자리에 걸리거나 작게 보이는 장면에서는 박스가 뜨지 않은 경우가 많았습니다.",
           "image": "/images/others/rpi-yolo/result.webp",
           "imageAlt": "Raspberry Pi 5 실시간 추론 화면. 게임패드가 보일 때 game pad 박스와 신뢰도가 표시된다"
         },
         {
           "title": "배운 점",
-          "body": "학습은 PC에서, 추론은 보드에서 하는 엣지 AI의 기본 흐름을 직접 해 보며, 학습한 모델을 ONNX로 바꾸면 보드에서 onnxruntime만으로 실행할 수 있다는 것을 알게 되었습니다. 클래스 하나, 사진 100장 규모의 실습이라 정확도나 속도는 따로 측정하지 않았습니다."
+          "body": "학습은 PC에서, 추론은 보드에서 하는 엣지 AI의 기본 흐름을 직접 해 보며, 학습한 모델을 ONNX로 바꾸면 보드에서 onnxruntime만으로 실행할 수 있다는 것을 알게 되었습니다. 또 박스가 뜬 장면만 보면 잘 되는 것 같지만, 영상을 끝까지 보니 놓치는 장면도 많았습니다. 클래스 하나, 사진 100장 규모의 실습이라 정확도나 속도는 따로 측정하지 않았습니다."
         }
       ]
     }
