@@ -99,6 +99,20 @@
           ]
         },
         {
+          "title": "어려웠던 문제와 해결 과정",
+          "body": "만들면서 가장 오래 고민한 두 가지를 정리했습니다.",
+          "subsections": [
+            {
+              "title": "저장 과정의 안정성",
+              "body": "nand.txt를 바로 \"w\" 모드로 열면 그 순간 기존 내용이 비워지기 때문에, 쓰는 도중 실패하면 데이터 전체가 사라집니다. 그래서 nand.txt.tmp에 먼저 다 쓴 뒤 원본과 교체하도록 바꿨습니다.\n\n실패하는 시점에 따라 결과는 다음과 같습니다.\n\n• .tmp 쓰기나 fclose()가 실패하면: .tmp만 지워지고 기존 nand.txt는 그대로 남습니다.\n• 기존 nand.txt 삭제가 실패하면: 교체를 멈추고 기존 파일을 유지합니다.\n• 삭제한 뒤 rename()이 실패하거나 그 사이에 프로그램이 종료되면: nand.txt는 없고 .tmp에만 데이터가 남습니다.\n\n마지막 경우는 아직 남은 위험입니다. 다음 실행에서 loadNAND()는 nand.txt가 없으면 빈 SSD로 처리해 모든 값이 0x00000000으로 읽히고, 그 상태로 쓰면 .tmp까지 새 내용으로 덮여 이전 데이터를 되살릴 수 없습니다. Linux에서 nand.txt를 지우고 .tmp만 남긴 상태를 만들어 이 동작을 직접 확인했습니다. 또 fclose()는 OS 버퍼까지만 보장하므로, 전원이 꺼지는 상황까지 이 구조로 막을 수는 없습니다."
+            },
+            {
+              "title": "명령 파싱 (strtok())",
+              "body": "처음에는 Python의 split()처럼 한 번에 리스트를 돌려받는 함수를 기대했지만, C의 strtok()은 호출할 때마다 토큰을 하나씩 돌려줍니다. 동작을 확인해 보니 다음과 같았습니다.\n\n• 첫 호출에는 원본 문자열을, 이후에는 NULL을 넘깁니다. 다음 시작 위치는 함수 안에 기억됩니다.\n• 새 문자열을 만들지 않고, 원본의 구분자 자리를 '\\0'으로 바꾼 뒤 각 토큰의 시작 주소를 돌려줍니다.\n\n그래서 NULL이 나올 때까지 반복하며 포인터를 char* 배열에 담고, 개수가 최대치를 넘으면 -1을 돌려 그 명령을 거부하도록 parseInput()을 만들었습니다."
+            }
+          ]
+        },
+        {
           "title": "결과",
           "body": "Windows 로컬에서 실행해 확인했습니다.\n\n• write 3 0xAAAABBBB 후 read 3에서 같은 값 출력\n• fullwrite 0xABCDFFFF 후 read 50에서 같은 값 출력\n• testapp1 PASS, testapp2 PASS\n• read 100, write 3 0x123, write 3 0xabcdffff, hello 입력은 모두 INVALID COMMAND",
           "image": "/images/ssd/result-normal.webp",
