@@ -16,7 +16,7 @@ export type PortfolioData = {
   site: { title: string; description: string; example: boolean };
   profile: {
     name: string; role: string; intro: string; fields: string[]; links: PublicLink[];
-    experiences: RecordEntry[]; education: RecordEntry[];
+    experiences: RecordEntry[]; education: RecordEntry[]; awards: RecordEntry[];
   };
   projects: Project[];
   others: SubProject[];

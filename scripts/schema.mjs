@@ -35,11 +35,11 @@ export function validatePortfolio(data) {
     str(data.site.title, "site.title"); str(data.site.description, "site.description");
     if (typeof data.site.example !== "boolean") fail("site.example", "true 또는 false여야 합니다.");
   }
-  if (obj(data.profile, "profile", ["name", "role", "intro", "fields", "links", "experiences", "education"])) {
+  if (obj(data.profile, "profile", ["name", "role", "intro", "fields", "links", "experiences", "education", "awards"])) {
     for (const key of ["name", "role", "intro"]) str(data.profile[key], `profile.${key}`);
     list(data.profile.fields, "profile.fields", (item, at) => str(item, at));
     links(data.profile.links, "profile.links");
-    records(data.profile.experiences, "profile.experiences"); records(data.profile.education, "profile.education");
+    records(data.profile.experiences, "profile.experiences"); records(data.profile.education, "profile.education"); records(data.profile.awards, "profile.awards");
   }
   const ids = new Set();
   list(data.projects, "projects", (p, at) => {

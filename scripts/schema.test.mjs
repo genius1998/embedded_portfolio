@@ -23,6 +23,7 @@ test("reports duplicate URLs, invalid graph choice, missing alt and schema typos
   draft.projects[1].id = draft.projects[0].id;
   draft.projects[0].art = "unknown";
   draft.projects[0].image = "/images/demo.png";
+  draft.projects[0].imageAlt = "";
   draft.projects[0].artLabels = [];
   draft.profile.proficency = 100;
   const errors = validatePortfolio(draft).join("\n");

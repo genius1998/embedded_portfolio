@@ -25,6 +25,7 @@
 | `profile.links` | 공개할 연락처와 링크 |
 | `profile.experiences` | 확인된 경험 목록. 없으면 `[]` |
 | `profile.education` | 공개할 교육 목록. 없으면 `[]` |
+| `profile.awards` | 자격·수상 목록(`title`, `period`, `description`). 없으면 `[]` |
 
 링크 항목의 예:
 
