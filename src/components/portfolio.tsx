@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type MouseEvent } from "react";
-import type { PortfolioData, Project, PublicLink } from "@/lib/types";
+import type { PortfolioData, Project, PublicLink, SubProject } from "@/lib/types";
 import { sitePath } from "@/lib/content";
 import { ThemeToggle } from "./theme-toggle";
 import { ProjectArt } from "./project-art";
@@ -14,6 +14,12 @@ function Links({ links, button = false }: { links: PublicLink[]; button?: boolea
 function ProjectMetadata({ project }: { project: Project }) {
   return <div className="detail-meta"><p><span className="role-label">내가 맡은 역할</span>{project.role}</p><ul className="tags">{project.stack.map((name) => <li key={name}>{name}</li>)}</ul><Links links={project.links} button /></div>;
 }
+function OtherCard({ item, onOpen }: { item: SubProject; onOpen: (event: MouseEvent<HTMLAnchorElement>) => void }) {
+  return <a className="other-card" href={`#others/${item.id}`} onClick={onOpen}>
+    {item.image ? <img src={sitePath(item.image)} alt="" loading="lazy" /> : <span className="other-card-blank" aria-hidden="true" />}
+    <span className="other-card-text"><span className="num">{item.category} · {item.period}</span><b>{item.name}</b><span>{item.summary}</span><span className="other-card-tags">{item.stack.join(" · ")}</span></span>
+  </a>;
+}
 export function ProjectBody({ project }: { project: Project }) {
   return <div className="project-body"><ProjectMetadata project={project} /><ProjectSections project={project} /></div>;
 }
@@ -23,12 +29,13 @@ function Accent({ text, accent }: { text: string; accent: string }) {
 }
 export function Portfolio({ data }: { data: PortfolioData }) {
   const { profile, projects } = data;
+  const others = data.others || [];
   const first = projects[0] ? `project/${projects[0].id}` : "about";
   const [selected, setSelected] = useState(first);
   const root = useRef<HTMLDivElement>(null);
   const main = useRef<HTMLElement>(null);
   useReadingChrome(root, selected);
-  const valid = (key: string) => ["about", "skills", "writing"].includes(key) || projects.some((p) => key === `project/${p.id}` || key === `project/${p.id}/details`);
+  const valid = (key: string) => ["about", "others", "skills", "writing"].includes(key) || others.some((o) => key === `others/${o.id}`) || projects.some((p) => key === `project/${p.id}` || key === `project/${p.id}/details`);
   useEffect(() => {
     const sync = () => {
       let key = "";
@@ -50,6 +57,7 @@ export function Portfolio({ data }: { data: PortfolioData }) {
     main.current?.scrollTo(0, 0);
     main.current?.focus({ preventScroll: true });
   };
+  const other = others.find((o) => selected === `others/${o.id}`);
   const project = projects.find((p) => selected === `project/${p.id}` || selected === `project/${p.id}/details`);
   const detail = selected.endsWith("/details");
   const current = (key: string) => selected === key || selected === `${key}/details` ? "page" as const : undefined;
@@ -59,7 +67,7 @@ export function Portfolio({ data }: { data: PortfolioData }) {
       <nav className="browser-choices" aria-label="프로젝트 선택">
         {projects.map((p, i) => <a key={p.id} href={`#project/${p.id}`} aria-current={current(`project/${p.id}`)} onClick={(e) => choose(e, `project/${p.id}`)}><span className="browser-no num">{String(i + 1).padStart(2, "0")}</span><b>{p.name}</b><em>{p.category}</em></a>)}
       </nav>
-      <nav className="browser-resources" aria-label="소개와 기록"><a href="#about" aria-current={current("about")} onClick={(e) => choose(e, "about")}>소개·이력</a><a href="#skills" aria-current={current("skills")} onClick={(e) => choose(e, "skills")}>기술 스택</a><a href="#writing" aria-current={current("writing")} onClick={(e) => choose(e, "writing")}>글과 기록</a></nav>
+      <nav className="browser-resources" aria-label="소개와 기록"><a href="#about" aria-current={current("about")} onClick={(e) => choose(e, "about")}>소개·이력</a><a href="#others" aria-current={selected === "others" || selected.startsWith("others/") ? "page" : undefined} onClick={(e) => choose(e, "others")}>그 외 경험</a><a href="#skills" aria-current={current("skills")} onClick={(e) => choose(e, "skills")}>기술 스택</a><a href="#writing" aria-current={current("writing")} onClick={(e) => choose(e, "writing")}>글과 기록</a></nav>
       <Links links={profile.links} />
       {data.site.example && <p className="template-note">샘플 포트폴리오<br />내용을 내 이야기로 바꿔 보세요.</p>}
     </aside>
@@ -73,7 +81,11 @@ export function Portfolio({ data }: { data: PortfolioData }) {
             <p className="stage-summary">{project.summary}</p><p className="stage-role"><span className="role-label">내가 맡은 역할</span>{project.role}</p>
           </header>
           <ProjectArt project={project} /><footer className="stage-foot"><ul className="tags">{project.stack.map((name) => <li key={name}>{name}</li>)}</ul><Links links={project.links} button /></footer>
-        </> : selected === "skills" ? <section className="text-page"><p className="eyebrow">TOOLS & PRACTICE</p><h2>기술 스택</h2><p className="page-intro">직접 사용한 기술과, 그 기술로 해 본 일입니다.</p>{data.skills.length ? <div className="skills-grid">{data.skills.map((skill) => <article key={skill.name}><h3>{skill.name}</h3><p>{skill.usage}</p></article>)}</div> : <p className="empty-state">아직 등록한 기술이 없습니다.</p>}</section>
+        </> : other ? <section className="text-page other-detail"><a className="other-back" href="#others" onClick={(e) => choose(e, "others")}>← 그 외 경험</a><p className="eyebrow">{other.category} · {other.period}</p><h2>{other.name}</h2><p className="page-intro">{other.summary}</p>
+          <div className="detail-meta"><ul className="tags">{other.stack.map((name) => <li key={name}>{name}</li>)}</ul>{other.links.length > 0 && <Links links={other.links} button />}</div>
+          <ProjectSections project={{ id: `other-${other.id}`, sections: other.sections }} /></section>
+        : selected === "others" ? <section className="text-page"><p className="eyebrow">OTHER WORK</p><h2>그 외 경험</h2><p className="page-intro">메인 프로젝트 외에 과정 실습에서 직접 해 본 것들입니다. 항목을 누르면 자세한 내용을 볼 수 있습니다.</p>{others.length ? <div className="other-list">{others.map((item) => <OtherCard key={item.id} item={item} onOpen={(e) => choose(e, `others/${item.id}`)} />)}</div> : <p className="empty-state">아직 등록한 경험이 없습니다.</p>}</section>
+        : selected === "skills" ? <section className="text-page"><p className="eyebrow">TOOLS & PRACTICE</p><h2>기술 스택</h2><p className="page-intro">직접 사용한 기술과, 그 기술로 해 본 일입니다.</p>{data.skills.length ? <div className="skills-grid">{data.skills.map((skill) => <article key={skill.name}><h3>{skill.name}</h3><p>{skill.usage}</p></article>)}</div> : <p className="empty-state">아직 등록한 기술이 없습니다.</p>}</section>
         : selected === "writing" ? <section className="text-page"><p className="eyebrow">NOTES & QUESTIONS</p><h2>글과 기록</h2><p className="page-intro">만들면서 만난 문제와 그 문제를 풀어 간 기록입니다.</p>{data.writing.length ? <div className="writing-list">{data.writing.map((post) => <article key={post.url}><a href={post.url} target="_blank" rel="noopener noreferrer"><h3>{post.title} ↗</h3><p>{post.summary}</p></a></article>)}</div> : <p className="empty-state">아직 등록한 글이 없습니다.</p>}</section>
         : <section className="text-page"><p className="eyebrow">ABOUT ME</p><h2>{profile.name}</h2><p className="about-intro">{profile.intro}</p><Links links={profile.links} />
           {[{ name: "경험", rows: profile.experiences }, { name: "교육", rows: profile.education }].map((group) => group.rows.length > 0 && <section className="record-group" key={group.name}><h3>{group.name}</h3>{group.rows.map((row, i) => <article key={i}><span className="num">{row.period}</span><div><h4>{row.title}</h4><p>{row.description}</p></div></article>)}</section>)}

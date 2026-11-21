@@ -124,6 +124,18 @@ button { font:inherit; color:inherit; }
 .skills-grid h3 { font-size:22px; font-weight:800; }
 .skills-grid p { margin-top:10px; color:var(--ink-2); font-size:15px; }
 .empty-state { margin-top:40px; padding-block:24px; border-top:1px solid var(--line); color:var(--ink-2); }
+.other-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:28px; margin-top:42px; }
+.other-card { display:grid; gap:14px; text-decoration:none; padding-top:18px; border-top:2px solid var(--ink); }
+.other-card img,.other-card-blank { display:block; width:100%; aspect-ratio:16/10; object-fit:cover; border:1px solid var(--line); border-radius:6px; background:var(--line); }
+.other-card-text { display:grid; gap:8px; }
+.other-card-text .num { font-size:11px; color:var(--ink-2); letter-spacing:.06em; }
+.other-card-text b { font-size:20px; font-weight:800; letter-spacing:-.02em; }
+.other-card-text span { color:var(--ink-2); font-size:15px; }
+.other-card-text .other-card-tags { font-size:12px; }
+.other-card:hover b { text-decoration:underline; text-underline-offset:5px; }
+.other-back { display:inline-block; margin-bottom:22px; font-size:13px; font-weight:700; text-decoration:none; }
+.other-back:hover { text-decoration:underline; text-underline-offset:5px; }
+.other-detail .detail-meta { margin-top:24px; }
 .writing-list { margin-top:40px; }
 .writing-list article { padding-block:24px; border-top:1px solid var(--line); }
 .writing-list a { text-decoration:none; }
@@ -184,7 +196,7 @@ button { font:inherit; color:inherit; }
   .detail-section h3 span { display:inline; margin-right:12px; }
   .detail-section p { font-size:15px; }
   .record-group article { grid-template-columns:1fr; gap:5px; }
-  .skills-grid { grid-template-columns:1fr; }
+  .skills-grid,.other-list { grid-template-columns:1fr; }
 }
 @media (prefers-reduced-motion:reduce) {
   *,*::before,*::after { animation:none !important; transition:none !important; scroll-behavior:auto !important; }

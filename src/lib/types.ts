@@ -8,6 +8,10 @@ export type Project = {
   image: string; imageAlt: string; art: "orbit" | "layers" | "flow" | "nand" | "signal" | "quantization" | "none";
   artLabels: string[]; sections: Section[];
 };
+export type SubProject = {
+  id: string; name: string; category: string; period: string; summary: string;
+  stack: string[]; links: PublicLink[]; image: string; imageAlt: string; sections: Section[];
+};
 export type PortfolioData = {
   site: { title: string; description: string; example: boolean };
   profile: {
@@ -15,6 +19,7 @@ export type PortfolioData = {
     experiences: RecordEntry[]; education: RecordEntry[];
   };
   projects: Project[];
+  others: SubProject[];
   skills: { name: string; usage: string }[];
   writing: { title: string; summary: string; url: string }[];
 };

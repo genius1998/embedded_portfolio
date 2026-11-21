@@ -29,13 +29,13 @@ function ProjectMark({ project }: { project: Project }) {
   </svg>;
 }
 
-export const sectionId = (project: Project, index: number) => `${project.id}-section-${index + 1}`;
+export const sectionId = (project: Pick<Project, "id">, index: number) => `${project.id}-section-${index + 1}`;
 
 function Figure({ image, alt }: { image?: string; alt?: string }) {
   return image ? <figure className="detail-figure"><img src={sitePath(image)} alt={alt || ""} loading="lazy" /><figcaption>{alt}</figcaption></figure> : null;
 }
 
-export function ProjectSections({ project }: { project: Project }) {
+export function ProjectSections({ project }: { project: Pick<Project, "id" | "sections"> }) {
   return <>{project.sections.map((section, i) => <section className="detail-section" id={sectionId(project, i)} key={i} tabIndex={-1} data-reading-section={i}>
     <h3><span className="num">{String(i + 1).padStart(2, "0")}</span>{section.title}</h3><div className="detail-section-body"><p>{section.body}</p><Figure image={section.image} alt={section.imageAlt} />
       {section.subsections?.map((sub, j) => <div className="detail-subsection" key={j}><h4><span className="num">{String(i + 1).padStart(2, "0")}-{j + 1}</span>{sub.title}</h4><p>{sub.body}</p><Figure image={sub.image} alt={sub.imageAlt} /></div>)}</div>

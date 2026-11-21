@@ -30,7 +30,7 @@ export function validatePortfolio(data) {
     if (!obj(entry, at, ["title", "period", "description"])) return;
     str(entry.title, `${at}.title`); str(entry.period, `${at}.period`); str(entry.description, `${at}.description`, true);
   });
-  if (!obj(data, "portfolio", ["site", "profile", "projects", "skills", "writing"])) return errors;
+  if (!obj(data, "portfolio", ["site", "profile", "projects", "others", "skills", "writing"])) return errors;
   if (obj(data.site, "site", ["title", "description", "example"])) {
     str(data.site.title, "site.title"); str(data.site.description, "site.description");
     if (typeof data.site.example !== "boolean") fail("site.example", "true 또는 false여야 합니다.");
@@ -66,6 +66,26 @@ export function validatePortfolio(data) {
       if (section.image && (typeof section.imageAlt !== "string" || !section.imageAlt.trim())) fail(`${key}.imageAlt`, "이미지 내용을 설명해 주세요.");
     };
     list(p.sections, `${at}.sections`, sectionCheck(["title", "body", "image", "imageAlt", "subsections"]));
+  });
+  const otherIds = new Set();
+  list(data.others, "others", (o, at) => {
+    if (!obj(o, at, ["id", "name", "category", "period", "summary", "stack", "links", "image", "imageAlt", "sections"])) return;
+    for (const key of ["id", "name", "category", "period", "summary"]) str(o[key], `${at}.${key}`);
+    for (const key of ["image", "imageAlt"]) str(o[key], `${at}.${key}`, true);
+    if (typeof o.id !== "string" || !/^[a-z][a-z0-9-]*$/.test(o.id)) fail(`${at}.id`, "영문 소문자로 시작하고 영문 소문자·숫자·하이픈만 사용하세요.");
+    if (otherIds.has(o.id)) fail(`${at}.id`, "다른 경험과 id가 겹칩니다.");
+    otherIds.add(o.id);
+    if (o.image && !isLocalImage(o.image)) fail(`${at}.image`, "/images/example.png처럼 public/images 안의 파일 경로를 쓰세요.");
+    if (o.image && (typeof o.imageAlt !== "string" || !o.imageAlt.trim())) fail(`${at}.imageAlt`, "이미지 내용을 설명해 주세요.");
+    list(o.stack, `${at}.stack`, (item, key) => str(item, key)); links(o.links, `${at}.links`);
+    list(o.sections, `${at}.sections`, (section, key) => {
+      if (!obj(section, key, ["title", "body"].concat(Object.keys(section || {}).filter((f) => ["image", "imageAlt", "subsections"].includes(f))))) return;
+      str(section.title, `${key}.title`); str(section.body, `${key}.body`);
+      for (const item of [section, ...(Array.isArray(section.subsections) ? section.subsections : [])]) {
+        if ("image" in item && !isLocalImage(item.image)) fail(`${key}.image`, "/images/example.png처럼 public/images 안의 파일 경로를 쓰세요.");
+        if (item.image && (typeof item.imageAlt !== "string" || !item.imageAlt.trim())) fail(`${key}.imageAlt`, "이미지 내용을 설명해 주세요.");
+      }
+    });
   });
   list(data.skills, "skills", (skill, at) => {
     if (!obj(skill, at, ["name", "usage"])) return;

@@ -8,5 +8,6 @@ catch (error) { console.error(`content/portfolio.json을 읽을 수 없습니다
 const errors = validatePortfolio(data);
 if (!errors.length) for (const p of data.projects) for (const [i, s] of p.sections.entries()) for (const item of [s, ...(s.subsections || [])]) if (item.image && !fs.existsSync(path.join(root, "public", item.image))) errors.push(`projects.${p.id}.sections[${i}] image: public${item.image} 파일이 없습니다.`);
 if (!errors.length) for (const p of data.projects) if (p.image && !fs.existsSync(path.join(root, "public", p.image))) errors.push(`projects.${p.id}.image: public${p.image} 파일이 없습니다.`);
+if (!errors.length) for (const o of data.others) for (const item of [o, ...o.sections, ...o.sections.flatMap((s) => s.subsections || [])]) if (item.image && !fs.existsSync(path.join(root, "public", item.image))) errors.push(`others.${o.id} image: public${item.image} 파일이 없습니다.`);
 if (errors.length) { console.error(`콘텐츠를 확인해 주세요:\n${errors.join("\n")}`); process.exit(1); }
-console.log(`콘텐츠 확인 완료 · ${data.projects.length}개 프로젝트${data.site.example ? " · 샘플 표시 중" : ""}`);
+console.log(`콘텐츠 확인 완료 · ${data.projects.length}개 프로젝트 · 그 외 경험 ${data.others.length}개${data.site.example ? " · 샘플 표시 중" : ""}`);
