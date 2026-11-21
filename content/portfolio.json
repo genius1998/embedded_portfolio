@@ -1,6 +1,6 @@
 {
   "site": {
-    "title": "김인규 · 임베디드 개발자 포트폴리오",
+    "title": "임베디드 개발자 포트폴리오",
     "description": "STM32 2륜 밸런싱 로봇, ROS 2 로봇팔 제어, C로 만든 가상 SSD Test Shell, 리눅스 시그널 기반 펌웨어 제어 시스템을 정리한 임베디드 개발자 포트폴리오입니다.",
     "example": false
   },
