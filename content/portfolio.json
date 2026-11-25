@@ -454,6 +454,85 @@
           "body": "리눅스 시스템 프로그래밍을 처음 다뤄 보며 알게 된 기본 개념을 정리했습니다.\n\n• 프로세스 간 통신(IPC)이 왜 필요한지: 프로세스는 각자 메모리를 따로 쓰기 때문에, User App이 Firmware App의 변수를 직접 바꿀 수 없습니다. 운영체제(커널)를 거쳐 전달하는 방법이 필요하고, 그 방법을 IPC라고 부른다는 것을 알게 되었습니다.\n• 시그널로 IPC를 구현하는 방법: 상대 프로세스를 PID로 지정하고 kill()로 시그널을 보냅니다. kill(pid, 0)으로 프로세스가 살아 있는지 먼저 확인할 수 있고, sigqueue()를 쓰면 시그널에 정수 값을 함께 실을 수 있어 add/del/show를 명령 번호로 보냈습니다. 받는 쪽에서는 sigwaitinfo()로 꺼내 보낸 쪽 PID와 명령 번호를 읽었습니다.\n• 프로세스와 스레드의 차이: 프로세스끼리는 IPC가 필요하지만, 같은 프로세스 안의 스레드는 메모리를 함께 씁니다. 그래서 채굴기 스레드들이 coins 하나를 같이 올릴 수 있었고, 대신 동시에 건드리면 값이 틀어질 수 있어 mutex로 한 번에 하나만 접근하게 했습니다."
         }
       ]
+    },
+    {
+      "id": "rpi5-gpio-driver",
+      "name": "Raspberry Pi 5 GPIO 디바이스 드라이버 (Linux Kernel Module)",
+      "category": "리눅스 커널 프로그래밍",
+      "period": "2026.11",
+      "role": "커널 빌드, 드라이버·앱 구현, 회로 연결 (개인 실습)",
+      "title": "앱에서 ioctl 한 번으로\nRP1 GPIO 레지스터까지",
+      "accent": "ioctl",
+      "summary": "라즈베리파이 5의 커널을 직접 빌드하고, 커널 모듈 형태의 캐릭터 디바이스 드라이버를 만들어 앱에서 ioctl로 LED와 버튼을 제어했습니다. 드라이버는 데이터시트에서 찾은 RP1 GPIO 레지스터 주소를 ioremap으로 매핑해 비트 연산으로 핀을 설정합니다.",
+      "stack": [
+        "C",
+        "Linux Kernel Module",
+        "Character Device",
+        "ioctl",
+        "ioremap",
+        "Kernel Timer",
+        "Raspberry Pi 5 (RP1)",
+        "Makefile (kbuild)"
+      ],
+      "links": [],
+      "image": "/images/rpi5-gpio/architecture.svg",
+      "imageAlt": "app → /dev/deviceFile → ioctl → 디바이스 드라이버 → ioremap → RP1 GPIO 레지스터 → LED·버튼 구조도",
+      "art": "none",
+      "artLabels": [
+        "/dev 노드 · device_create",
+        "ioctl · copy_to/from_user",
+        "ioremap · RP1 GPIO"
+      ],
+      "sections": [
+        {
+          "title": "프로젝트 배경",
+          "body": "SSAFY 임베디드 리눅스 커널 프로그래밍 과정(3일)의 실습과 도전 과제입니다.\n\n사용자 공간의 앱은 커널 공간과 하드웨어 레지스터에 직접 접근할 수 없습니다. 앱이 장치를 제어하려면 장치에 대응하는 장치 파일(/dev 아래의 디바이스 노드)에 시스템 콜을 보내고, 커널 안의 디바이스 드라이버가 실제 레지스터를 건드려야 합니다.\n\n이 실습에서는 이 경로를 처음부터 끝까지 직접 만들었습니다. 커널 빌드 → 커널 모듈 → 장치 파일 → 앱과 드라이버 간 데이터 전달 → 레지스터 제어 → 커널 타이머 순서로 쌓아 올렸습니다."
+        },
+        {
+          "title": "구조",
+          "body": "• app: 사용자 입력을 ioctl 명령으로 바꿔 /dev/deviceFile에 보냅니다.\n• 디바이스 드라이버(.ko): fops에 open·release·unlocked_ioctl을 등록하고, 명령 번호에 따라 LED를 켜고 끄거나 버튼 상태를 돌려줍니다.\n• ioremap 영역: RP1 주변장치의 물리 주소를 커널 가상 주소로 매핑한 영역입니다. 여기서 io_bank0과 pads_bank0의 GPIO 레지스터를 읽고 씁니다.\n• 하드웨어: GPIO20에 LED(220Ω), GPIO2에 버튼(10kΩ)을 연결했습니다.",
+          "image": "/images/rpi5-gpio/architecture.svg",
+          "imageAlt": "app → /dev/deviceFile → ioctl → 디바이스 드라이버 → ioremap 영역 → RP1 GPIO 레지스터 → LED·버튼 구조도"
+        },
+        {
+          "title": "내가 한 일",
+          "body": "• 라즈베리파이 5(BCM2712)용 커널 소스를 직접 빌드해 드라이버 개발 환경 구성\n• 커널 모듈 작성과 kbuild Makefile, insmod/rmmod와 dmesg로 동작 확인\n• device_create()로 /dev 노드를 자동 생성하는 캐릭터 디바이스 드라이버 구현\n• ioctl 명령과 copy_to_user()/copy_from_user()로 앱 ↔ 드라이버 데이터 전달, 구조체 전송\n• RP1 데이터시트에서 GPIO 레지스터 주소와 비트 필드를 찾아 ioremap과 비트 연산으로 LED 출력·버튼 입력 구현\n• 지연 함수 대신 커널 타이머로 주기 동작 구현"
+        },
+        {
+          "title": "핵심 구현",
+          "body": "앱의 요청이 레지스터까지 내려가는 단계별로 정리했습니다.",
+          "subsections": [
+            {
+              "title": "커널 빌드",
+              "body": "외부 드라이버를 컴파일하려면 실행 중인 커널과 정확히 같은 빌드 환경(헤더, 심볼 정보)이 필요합니다. 기본 OS에는 개발용 파일이 빠져 있거나 버전이 다를 수 있어서, 라즈베리파이 5(BCM2712) 설정으로 커널 소스를 직접 빌드하고 그 위에서 모듈을 빌드했습니다."
+            },
+            {
+              "title": "장치 파일 자동 생성",
+              "body": "처음에는 mknod로 /dev/deviceFile을 직접 만들었는데, 재부팅하면 다시 만들어야 했습니다. 그래서 register_chrdev()에 major 0을 넘겨 주번호를 동적으로 받고, class_create()와 device_create()로 insmod 시점에 장치 파일이 생기게 바꿨습니다. rmmod 때는 device_destroy(), class_destroy(), unregister_chrdev() 순서로 정리합니다."
+            },
+            {
+              "title": "ioctl과 copy_to/from_user",
+              "body": "사용자 공간과 커널 공간은 주소 체계가 달라서, 앱의 포인터를 커널에서 그대로 쓰면 다른 곳을 가리킵니다. 그래서 데이터는 copy_from_user()와 copy_to_user()로 복사해 주고받습니다. 장치 제어 명령은 read/write 대신 ioctl을 쓰고, _IO() 매크로로 만든 명령 번호를 switch로 나눠 처리하며, 모르는 명령에는 오류를 돌려줘 앱에서 확인할 수 있게 했습니다."
+            },
+            {
+              "title": "ioremap으로 RP1 GPIO 제어",
+              "body": "라즈베리파이 5는 GPIO 컨트롤러가 메인 칩(BCM2712) 밖의 RP1 I/O 컨트롤러에 있고, 둘은 PCIe로 연결됩니다. 데이터시트의 주소 맵을 보고 CPU가 RP1 주변장치를 보는 물리 주소를 ioremap()으로 매핑한 뒤, io_bank0과 pads_bank0 오프셋을 더해 레지스터에 접근했습니다. 레지스터가 32비트라 uint32_t 포인터 연산에 맞게 바이트 오프셋을 4로 나눴습니다.\n\n• LED(GPIO20): GPIO20_CTRL의 FUNCSEL로 GPIO 기능을 고르고, OEOVER로 출력을 켠 뒤 OUTOVER 13:12비트를 0x3(HIGH)/0x2(LOW)로 바꿔 켜고 끕니다. pads 쪽은 OD 비트를 지우고 DRIVE를 4mA로 설정합니다.\n• 버튼(GPIO2): 출력을 끄고 pads의 IE 비트로 입력을 켠 뒤, GPIO2_STATUS의 EVENT_LEVEL_HIGH(23번 비트)를 읽어 copy_to_user()로 앱에 넘깁니다.\n• rmmod 때는 LED를 끄고 iounmap()으로 매핑을 해제합니다."
+            },
+            {
+              "title": "지연 대신 커널 타이머",
+              "body": "mdelay() 같은 지연 함수는 기다리는 동안 CPU를 붙잡아 시스템을 멈춥니다. 그래서 timer_setup()으로 콜백을 등록하고 mod_timer()로 다음 만료 시간을 jiffies와 HZ로 정해 주기 동작을 만들었고, 모듈을 내릴 때는 timer_delete_sync()로 타이머를 정리했습니다. 이 방식으로 타이머 콜백에서 LED를 1초마다 깜빡이고, 상태를 ioctl로 앱에 전달했습니다. 이 커널의 HZ는 .config의 CONFIG_HZ에서 250으로 확인했습니다."
+            }
+          ]
+        },
+        {
+          "title": "도전 과제",
+          "body": "• 비트 연산: RP1 데이터시트를 보고 GPIO2_CTRL, GPIO2_STATUS, GPIO20_CTRL, PADBANK0 레지스터의 지정 필드를 CLR/SET/추출\n• ioctl 실습: 앱에서 cmd(3~6)와 arg를 입력받아 드라이버로 전달\n• 구조체 전송: 앱에서 숫자 4개를 구조체로 보내고 드라이버가 합을 돌려줌\n• Memory Mapped IO: insmod만으로 GPIOn_CTRL의 기본값 필드를 비트 연산으로 읽어 확인\n• PWM: 앱에서 10~90을 입력받아 LED가 켜져 있는 시간 비율을 조절하고, 범위 밖 값이면 LED를 끄고 종료\n• 타이머로 LED 2개 제어: 커널 타이머로 두 LED를 5초, 7초 주기로 깜빡이고 두 LED의 상태를 구조체로 앱에 전달\n• 미들웨어 API: 비트 연산 없이 GPIO를 쓸 수 있게 ssafy_gpio_pinMode(), ssafy_gpio_output() 같은 래퍼 함수를 ssafy_gpio.c로 만들고, 오류를 알 수 있게 반환값을 정하고 문서를 작성"
+        },
+        {
+          "title": "배운 점",
+          "body": "• 앱이 장치를 제어하는 실제 경로: 시스템 콜 → 장치 파일 → fops → 드라이버 → 레지스터\n• 사용자 공간과 커널 공간의 메모리가 분리된 이유와, copy_to_user()/copy_from_user()로 복사해야 하는 이유\n• 데이터시트의 주소 맵과 레지스터 표에서 필요한 주소와 비트 필드를 직접 찾아 코드로 옮기는 방법\n• 커널 안에서는 기다리지 않고 타이머로 나중에 실행해야 한다는 것\n\n레지스터 주소와 필드 값은 라즈베리파이 5(RP1)에만 해당합니다. 다른 보드에서는 그 보드의 데이터시트를 다시 봐야 합니다."
+        }
+      ]
     }
   ],
   "others": [

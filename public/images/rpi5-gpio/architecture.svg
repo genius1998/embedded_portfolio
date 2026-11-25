@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 400" font-family="Pretendard, 'Noto Sans KR', 'Malgun Gothic', sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="#4b4f5c"/></marker>
+  </defs>
+  <rect width="960" height="400" rx="16" fill="#f7f7f8"/>
+  <rect x="24" y="24" width="912" height="96" rx="12" fill="#eef1f8" stroke="#c9d1e4"/>
+  <text x="44" y="50" font-size="15" fill="#5a6378" font-weight="600">User space</text>
+  <rect x="24" y="140" width="912" height="132" rx="12" fill="#f3eefa" stroke="#d6c9ea"/>
+  <text x="44" y="166" font-size="15" fill="#6c5a86" font-weight="600">Kernel space</text>
+  <rect x="24" y="292" width="912" height="84" rx="12" fill="#eef7f1" stroke="#c4e0cd"/>
+  <text x="44" y="318" font-size="15" fill="#4f7a5d" font-weight="600">Hardware</text>
+
+  <g font-size="18" fill="#1f2330" text-anchor="middle">
+    <rect x="60" y="58" width="230" height="50" rx="10" fill="#fff" stroke="#8b96b3"/>
+    <text x="175" y="89">app (LED·버튼 제어)</text>
+    <rect x="370" y="58" width="220" height="50" rx="10" fill="#fff" stroke="#8b96b3"/>
+    <text x="480" y="89">/dev/deviceFile</text>
+
+    <rect x="370" y="182" width="220" height="74" rx="10" fill="#fff" stroke="#9c86c0"/>
+    <text x="480" y="212">디바이스 드라이버 (.ko)</text>
+    <text x="480" y="238" font-size="14" fill="#5d5870">fops · ioctl · 커널 타이머</text>
+    <rect x="670" y="182" width="230" height="74" rx="10" fill="#fff" stroke="#9c86c0"/>
+    <text x="785" y="212">ioremap 영역</text>
+    <text x="785" y="238" font-size="14" fill="#5d5870">io_bank0 · pads_bank0</text>
+
+    <rect x="670" y="306" width="230" height="56" rx="10" fill="#fff" stroke="#7fb090"/>
+    <text x="785" y="340">RP1 GPIO 레지스터</text>
+    <rect x="320" y="306" width="290" height="56" rx="10" fill="#fff" stroke="#7fb090"/>
+    <text x="465" y="340">LED (GPIO20) · 버튼 (GPIO2)</text>
+  </g>
+
+  <g stroke="#4b4f5c" stroke-width="2" fill="none">
+    <path d="M290 83H366" marker-end="url(#a)"/>
+    <path d="M480 108V178" marker-end="url(#a)"/>
+    <path d="M590 219H666" marker-end="url(#a)"/>
+    <path d="M785 256V302" marker-end="url(#a)"/>
+    <path d="M670 334H614" marker-end="url(#a)"/>
+  </g>
+  <g font-size="13" fill="#4b4f5c">
+    <text x="306" y="74">ioctl</text>
+    <text x="490" y="140">ioctl cmd + copy_from_user /</text>
+    <text x="490" y="158">copy_to_user</text>
+    <text x="600" y="210">비트 연산</text>
+    <text x="796" y="284">read/write 32bit</text>
+    <text x="618" y="324" font-size="12">출력·입력</text>
+  </g>
+</svg>
