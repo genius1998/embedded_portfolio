@@ -6,7 +6,7 @@ import { normalizeBasePath } from "./paths.mjs";
 const root = path.resolve(import.meta.dirname, "../out");
 const basePath = normalizeBasePath(process.env.PAGES_BASE_PATH || "");
 const port = Number(process.env.PORT || 4173);
-const types = { ".html":"text/html; charset=utf-8", ".css":"text/css", ".js":"text/javascript", ".svg":"image/svg+xml", ".json":"application/json", ".txt":"text/plain", ".ttf":"font/ttf", ".woff2":"font/woff2", ".png":"image/png", ".jpg":"image/jpeg" };
+const types = { ".html":"text/html; charset=utf-8", ".css":"text/css", ".js":"text/javascript", ".svg":"image/svg+xml", ".json":"application/json", ".txt":"text/plain", ".ttf":"font/ttf", ".woff2":"font/woff2", ".png":"image/png", ".jpg":"image/jpeg", ".jpeg":"image/jpeg", ".webp":"image/webp", ".gif":"image/gif", ".mp4":"video/mp4", ".webm":"video/webm" };
 http.createServer(async (req, res) => {
   try {
     let pathname = decodeURIComponent(new URL(req.url, "http://localhost").pathname);

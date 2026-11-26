@@ -10,6 +10,9 @@ export function isPublicUrl(value, email = true) {
 export function isLocalImage(value) {
   return typeof value === "string" && /^\/images\/[a-zA-Z0-9/_-]+\.(png|jpe?g|webp|gif|svg)$/i.test(value) && !value.includes("//");
 }
+export function isLocalMedia(value) {
+  return isLocalImage(value) || (typeof value === "string" && /^\/images\/[a-zA-Z0-9/_-]+\.(mp4|webm)$/i.test(value) && !value.includes("//"));
+}
 export function validatePortfolio(data) {
   const errors = [];
   const fail = (key, message) => errors.push(`${key}: ${message}`);
@@ -68,7 +71,7 @@ export function validatePortfolio(data) {
       for (const field of Object.keys(section)) if (!allowed.includes(field)) fail(`${key}.${field}`, "지원하지 않는 항목입니다. 오타 또는 문서를 확인하세요.");
       if ("subsections" in section) list(section.subsections, `${key}.subsections`, sectionCheck(["title", "body", "image", "imageAlt"]));
       str(section.title, `${key}.title`); str(section.body, `${key}.body`);
-      if ("image" in section && !isLocalImage(section.image)) fail(`${key}.image`, "/images/example.png처럼 public/images 안의 파일 경로를 쓰세요.");
+      if ("image" in section && !isLocalMedia(section.image)) fail(`${key}.image`, "/images/example.png처럼 public/images 안의 파일 경로를 쓰세요.");
       if (section.image && (typeof section.imageAlt !== "string" || !section.imageAlt.trim())) fail(`${key}.imageAlt`, "이미지 내용을 설명해 주세요.");
     };
     list(p.sections, `${at}.sections`, sectionCheck(["title", "body", "image", "imageAlt", "subsections"]));
@@ -88,7 +91,7 @@ export function validatePortfolio(data) {
       if (!obj(section, key, ["title", "body"].concat(Object.keys(section || {}).filter((f) => ["image", "imageAlt", "subsections"].includes(f))))) return;
       str(section.title, `${key}.title`); str(section.body, `${key}.body`);
       for (const item of [section, ...(Array.isArray(section.subsections) ? section.subsections : [])]) {
-        if ("image" in item && !isLocalImage(item.image)) fail(`${key}.image`, "/images/example.png처럼 public/images 안의 파일 경로를 쓰세요.");
+        if ("image" in item && !isLocalMedia(item.image)) fail(`${key}.image`, "/images/example.png처럼 public/images 안의 파일 경로를 쓰세요.");
         if (item.image && (typeof item.imageAlt !== "string" || !item.imageAlt.trim())) fail(`${key}.imageAlt`, "이미지 내용을 설명해 주세요.");
       }
     });

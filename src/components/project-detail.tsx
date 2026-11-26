@@ -32,7 +32,11 @@ function ProjectMark({ project }: { project: Project }) {
 export const sectionId = (project: Pick<Project, "id">, index: number) => `${project.id}-section-${index + 1}`;
 
 function Figure({ image, alt }: { image?: string; alt?: string }) {
-  return image ? <figure className="detail-figure"><img src={sitePath(image)} alt={alt || ""} loading="lazy" /><figcaption>{alt}</figcaption></figure> : null;
+  if (!image) return null;
+  const media = /\.(mp4|webm)$/i.test(image)
+    ? <video src={sitePath(image)} aria-label={alt || ""} controls muted loop playsInline preload="metadata" />
+    : <img src={sitePath(image)} alt={alt || ""} loading="lazy" />;
+  return <figure className="detail-figure">{media}<figcaption>{alt}</figcaption></figure>;
 }
 
 export function ProjectSections({ project }: { project: Pick<Project, "id" | "sections"> }) {
