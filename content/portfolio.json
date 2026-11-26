@@ -483,7 +483,9 @@
           "subsections": [
             {
               "title": "커널이라는 장벽",
-              "body": "MCU(STM32)에서는 펌웨어가 레지스터를 바로 씁니다. 리눅스는 메모리 공간과 CPU 권한을 사용자 공간(앱, ARM64 EL0)과 커널 공간(커널·드라이버, EL1)으로 나눠, 앱 하나의 오류가 시스템 전체를 멈추지 않도록 보호합니다. root 권한으로 /dev/mem을 매핑하면 앱에서도 레지스터를 건드릴 수는 있지만, 그러면 이 보호가 깨지고 인터럽트 처리나 여러 프로그램의 동시 접근을 관리할 수 없습니다. 그래서 하드웨어 제어는 커널 안의 디바이스 드라이버가 맡고, 앱은 시스템 콜로 요청만 합니다."
+              "body": "MCU(STM32)에서는 펌웨어가 레지스터를 바로 씁니다. 리눅스는 메모리 공간과 CPU 권한을 사용자 공간(앱, ARM64 EL0)과 커널 공간(커널·드라이버, EL1)으로 나눠, 앱 하나의 오류가 시스템 전체를 멈추지 않도록 보호합니다. root 권한으로 /dev/mem을 매핑하면 앱에서도 레지스터를 건드릴 수는 있지만, 그러면 이 보호가 깨지고 인터럽트 처리나 여러 프로그램의 동시 접근을 관리할 수 없습니다. 그래서 하드웨어 제어는 커널 안의 디바이스 드라이버가 맡고, 앱은 시스템 콜로 요청만 합니다.",
+              "image": "/images/others/rpi5-gpio/space-table.webp",
+              "imageAlt": "User Space와 Kernel Space 비교표. 실행되는 것, CPU 권한(EL0/EL1), 하드웨어 접근, 메모리, 오류가 났을 때, 쓸 수 있는 함수(printf·malloc / pr_info·kmalloc)"
             },
             {
               "title": "드라이버를 커널에 넣는 방법",
@@ -499,7 +501,9 @@
               "image": "/images/others/rpi5-gpio/app-devicefile-driver.webp",
               "imageAlt": "앱(App)과 장치 파일(Device File)이 요청과 응답을 주고받고, 장치 파일은 커널 공간(Kernel space)의 디바이스 드라이버(Device Driver)와 연결된 관계도"
             }
-          ]
+          ],
+          "image": "/images/others/rpi5-gpio/layer-compare.webp",
+          "imageAlt": "하드웨어 제어 계층 비교. 라즈베리파이 5는 앱, 미들웨어 API, 시스템 콜 경계(ioctl, 메모리 보호), 디바이스 드라이버(.ko), ioremap, RP1 GPIO 핀 순서로 내려가고, STM32는 펌웨어가 HAL이나 레지스터로 GPIO 핀을 바로 제어한다. 둘 다 데이터시트의 레지스터를 직접 제어한다는 원리는 같다."
         },
         {
           "title": "구현 범위",
