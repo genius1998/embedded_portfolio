@@ -488,8 +488,8 @@
         {
           "title": "구조",
           "body": "스위치 앱 → GPIO 미들웨어 API → ioctl 인터페이스(/dev/ssafy_gpio) → 자체 커널 드라이버(.ko) → ioremap → RP1 GPIO 레지스터 순서로 내려갑니다. 앱은 레지스터를 모르고 API만 부르며, 비트 연산은 모두 드라이버 안에 있습니다. 회로는 GPIO20에 LED(220Ω), GPIO2에 풀업(10kΩ) 버튼입니다.",
-          "image": "/images/others/rpi5-gpio/architecture.svg",
-          "imageAlt": "switch_app → ssafy_gpio API → 커널 드라이버(.ko) → RP1 GPIO 레지스터 4계층 구조, 길게 누를 때의 밝기 단계 20~100%, GPIO20_CTRL의 OUTOVER 13:12 비트"
+          "image": "/images/others/rpi5-gpio/structure.webp",
+          "imageAlt": "자체 장치용 드라이버 구조. 사용자 공간의 스위치 앱과 GPIO 미들웨어 API, ioctl 인터페이스(명령 6개, 공용 구조체, /dev/ssafy_gpio), 커널 공간의 자체 커널 드라이버(.ko), ioremap, 하드웨어의 RP1 GPIO 레지스터(GPIO20_CTRL 0x1f000d00a4)와 GPIO2 버튼, GPIO20 LED. gpiozero/libgpiod와 공식 드라이버 pinctrl-rp1 경로는 사용하지 않음"
         },
         {
           "title": "핵심 구현",
