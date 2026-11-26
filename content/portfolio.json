@@ -462,7 +462,7 @@
       "name": "Raspberry Pi 5 GPIO 드라이버와 버튼 LED 밝기 스위치",
       "category": "리눅스 커널 프로그래밍",
       "period": "2026.11",
-      "summary": "라즈베리파이 5의 RP1 GPIO 레지스터를 ioremap으로 직접 제어하는 커널 드라이버와 미들웨어 API를 만들고, 그 API만으로 버튼 하나짜리 LED 밝기 스위치를 구현했습니다. 짧게 누르면 켜고 끄고, 길게 누르면 밝기가 20~100%로 바뀌며, 버튼이 5초 넘게 눌려 있으면 고착으로 보고합니다. 실제 보드에서 동작을 영상으로 남겼습니다.",
+      "summary": "회사가 자체 제작한 장치를 붙인다는 가정으로, 기존 라이브러리 없이 앱과 커널 드라이버 사이의 약속(ioctl 번호, 구조체)을 직접 정의하고 양쪽을 구현했습니다. 라즈베리파이 5의 RP1 GPIO 레지스터를 ioremap으로 직접 제어하는 드라이버, 미들웨어 API, 버튼 하나로 LED를 켜고 밝기를 바꾸는 스위치 앱까지 만들었고, 실제 보드에서 자동 점검 23개 항목이 모두 통과했습니다.",
       "stack": [
         "C",
         "Linux Kernel Module",
@@ -478,36 +478,74 @@
       "imageAlt": "공식 드라이버 없이 레지스터부터 직접. 공식 경로(gpiozero/libgpiod → pinctrl-rp1)와 직접 만든 경로(스위치 앱 → GPIO 미들웨어 API → 자체 커널 드라이버 → ioremap → RP1 GPIO 레지스터) 비교, GPIO20_CTRL의 OUTOVER 13:12 비트, 버튼과 밝기가 바뀌는 LED",
       "sections": [
         {
-          "title": "해 본 것",
-          "body": "SSAFY 임베디드 리눅스 커널 프로그래밍 과정(3일)에서 배운 LED 제어, 버튼 입력, 커널 타이머, PWM, 미들웨어 도전 과제를 하나로 묶어, 차량 스위치 모듈처럼 동작하는 개인 프로젝트로 확장했습니다.\n\n• 짧게 누름(0.7초 미만): LED ON / OFF\n• 길게 누름(0.7초 이상): 0.4초마다 밝기 20 → 40 → 60 → 80 → 100 → 20% 순환\n• 5초 이상 계속 누름: BUTTON_STUCK 보고, 손을 뗄 때까지 입력 무시\n• 출력 readback 불일치: LED_OUTPUT_FAULT 보고, 드라이버가 LED를 강제로 끔\n• Ctrl+C, 앱 비정상 종료, rmmod: LED를 끄는 fail-safe\n\n앱은 레지스터를 모르고 미들웨어 API만 부르며, 비트 연산은 모두 드라이버 안에 있습니다. 회로는 GPIO20에 LED(220Ω), GPIO2에 풀업(10kΩ) 버튼입니다.",
+          "title": "프로젝트 배경",
+          "body": "회사가 자체 제작한 외부 장치를 붙인다고 가정했습니다. 이런 장치를 OS가 인식하고 제어하려면 자체 커널 드라이버가 필요합니다. 그런데 gpiozero, libgpiod 같은 기존 라이브러리는 리눅스 표준 GPIO 드라이버의 인터페이스(정해진 ioctl 번호와 구조체)에 맞춰져 있어, 자체 드라이버와는 대화할 수 없습니다. 그래서 앱과 드라이버 사이의 약속인 ioctl 번호와 구조체를 직접 정의하고 양쪽을 구현해야 합니다.\n\n라즈베리파이 5에서 이 상황을 재현하기 위해, 공식 GPIO 드라이버(pinctrl-rp1)를 쓰지 않고 RP1 GPIO 레지스터를 직접 제어하는 드라이버를 만들었습니다. SSAFY 임베디드 리눅스 커널 과정(3일)에서 배운 드라이버 실습을 바탕으로 한 개인 프로젝트입니다."
+        },
+        {
+          "title": "구현 범위",
+          "body": "• 커널 드라이버(.ko): RP1 GPIO 레지스터 직접 제어, /dev/ssafy_gpio 장치 파일\n• 인터페이스: ioctl 명령 6개(pinMode, write, read, pwm, diag, clear fault)와 앱·커널이 함께 쓰는 요청·진단 구조체\n• 미들웨어 API: 비트 연산 없이 쓰는 GPIO 함수, 에러코드, 버튼 디바운스\n• 스위치 앱: 짧게 누름 ON/OFF, 길게 누름 밝기 단계, 버튼 고착 감지\n• 자동 점검 프로그램(api_test)\n• 범위 밖: device tree 연동, 하드웨어 PWM, 리눅스 표준 GPIO 서브시스템 연동"
+        },
+        {
+          "title": "구조",
+          "body": "스위치 앱 → GPIO 미들웨어 API → ioctl 인터페이스(/dev/ssafy_gpio) → 자체 커널 드라이버(.ko) → ioremap → RP1 GPIO 레지스터 순서로 내려갑니다. 앱은 레지스터를 모르고 API만 부르며, 비트 연산은 모두 드라이버 안에 있습니다. 회로는 GPIO20에 LED(220Ω), GPIO2에 풀업(10kΩ) 버튼입니다.",
           "image": "/images/others/rpi5-gpio/architecture.svg",
           "imageAlt": "switch_app → ssafy_gpio API → 커널 드라이버(.ko) → RP1 GPIO 레지스터 4계층 구조, 길게 누를 때의 밝기 단계 20~100%, GPIO20_CTRL의 OUTOVER 13:12 비트"
         },
         {
-          "title": "시연",
-          "body": "실제 라즈베리파이 5에서 버튼을 짧게 눌러 LED를 켜고 끈 뒤, 길게 눌러 PWM 밝기 단계가 바뀌는 것을 확인했습니다. 터미널 로그에는 짧게 누름 토글, 길게 누름 밝기 단계(60 → 80 → 100 → 20 → 40%), 5초 이상 눌렀을 때 BUTTON_STUCK이 잡히고 손을 떼면 풀리는 과정이 남아 있습니다.",
+          "title": "내가 한 일",
+          "body": "• 라즈베리파이 5용 커널을 빌드해 모듈 개발 환경 구성\n• 앱과 드라이버가 공유하는 ioctl 번호와 구조체를 헤더 하나로 정의\n• RP1 데이터시트에서 GPIO 레지스터 주소와 비트 필드를 찾아 드라이버 구현\n• 미들웨어 API, 스위치 앱, 자동 점검 프로그램 작성\n• 회로 구성(GPIO20 LED, GPIO2 풀업 버튼)과 실제 보드 검증, 시연 영상 촬영"
+        },
+        {
+          "title": "핵심 구현",
+          "body": "앱의 요청이 레지스터까지 내려가는 순서대로 정리했습니다.",
+          "subsections": [
+            {
+              "title": "인터페이스 정의",
+              "body": "_IOW, _IOR, _IOWR 매크로로 명령 번호를 만들고, 앱과 커널이 같은 헤더를 써서 구조체 모양이 어긋나지 않게 했습니다. 사용자 공간과 커널 공간은 주소 체계가 달라서 데이터는 copy_from_user()와 copy_to_user()로 복사해 주고받고, 모르는 명령이나 잘못된 값은 오류로 돌려줍니다."
+            },
+            {
+              "title": "레지스터 직접 제어",
+              "body": "RP1 주변장치 물리 주소(0x1f00000000)를 ioremap으로 매핑하고 io_bank0·pads_bank0 오프셋으로 접근합니다. 출력은 GPIO20_CTRL(0x1f000d00a4)의 FUNCSEL·OEOVER·OUTOVER(13:12, 0x3 HIGH / 0x2 LOW) 비트로, 입력은 PAD의 IE 비트를 켜고 GPIOn_STATUS의 23번 비트로 읽습니다. device_create()로 insmod 때 /dev/ssafy_gpio가 생기게 했습니다."
+            },
+            {
+              "title": "hrtimer 소프트웨어 PWM",
+              "body": "100Hz(10ms 주기)로 ON/OFF 시간을 duty에 맞춰 다시 예약합니다. 0%와 100%는 PWM 없이 정적 출력으로 처리합니다."
+            },
+            {
+              "title": "readback 진단",
+              "body": "출력 핀도 PAD IE를 켜서 실제 핀 레벨을 STATUS로 다시 읽고, 명령한 값과 다르면 고장으로 잠그고 출력을 끕니다. clear fault 명령으로 해제할 수 있습니다."
+            },
+            {
+              "title": "API와 에러코드",
+              "body": "헤더 핀 GPIO2~27만 허용하고, 장치를 열기 전 호출, 범위 밖 핀, INPUT 핀에 출력, 값 범위 오류, 출력 고장, PWM 채널 사용 중을 각각 구분된 에러코드로 돌려줍니다. 버튼은 API에서 30ms 디바운스를 합니다."
+            },
+            {
+              "title": "fail-safe",
+              "body": "앱이 강제 종료돼 장치 파일이 닫힐 때와 rmmod 때 모든 출력을 LOW로 내리고 타이머를 정리합니다."
+            }
+          ]
+        },
+        {
+          "title": "결과",
+          "body": "실제 라즈베리파이 5에서 짧게 누르면 LED가 켜지고 꺼지고, 길게 누르면 밝기가 20 → 40 → 60 → 80 → 100%로 바뀌며, 5초 넘게 누르면 BUTTON_STUCK이 보고되고 손을 떼면 풀리는 것을 확인했습니다.",
           "image": "/images/others/rpi5-gpio/demo-board.mp4",
           "imageAlt": "브레드보드의 버튼을 짧게, 길게 눌러 LED가 켜지고 꺼지며 밝기가 바뀌는 실제 보드 영상",
           "subsections": [
+            {
+              "title": "API 자동 점검 (api_test)",
+              "body": "실제 라즈베리파이 5에서 모듈을 올리고 api_test를 돌려 23개 항목이 모두 통과했습니다(23 passed, 0 failed).\n\n• 입력 검증: 장치를 열기 전 호출(-1), 범위 밖 핀 1·28(-2), INPUT 핀에 출력(-3), 잘못된 모드·레벨·duty 150(-4)을 각각 구분된 에러코드로 돌려줌\n• 정상 동작: HIGH/LOW 출력 뒤 핀 레벨을 다시 읽어 1/0 확인, PWM 50% 설정과 diag의 duty 50 확인, PWM 중 고장 없음, 버튼을 뗀 상태의 입력 1\n• 고장 주입(inject_fault): 출력이 고장(-5)으로 잡히고 LED가 실제로 꺼짐(읽은 값 0), 고장이 잠긴 상태로 유지, clearFault 뒤 다시 HIGH 출력으로 복구"
+            },
             {
               "title": "터미널 로그",
               "body": "switch_app 출력입니다. [BTN]은 버튼 눌림과 뗌, [LED]는 출력 상태와 밝기, [DTC]는 고장 보고입니다.",
               "image": "/images/others/rpi5-gpio/demo-terminal.mp4",
               "imageAlt": "switch_app 터미널 로그 영상: short press 토글, long press 밝기 단계, BUTTON_STUCK 발생과 해제"
-            },
-            {
-              "title": "API 자동 점검 (api_test)",
-              "body": "실제 라즈베리파이 5에서 모듈을 올리고 api_test를 돌려 23개 항목이 모두 통과했습니다(23 passed, 0 failed).\n\n• 입력 검증: 장치를 열기 전 호출(-1), 범위 밖 핀 1·28(-2), INPUT 핀에 출력(-3), 잘못된 모드·레벨·duty 150(-4)을 각각 구분된 에러코드로 돌려줌\n• 정상 동작: HIGH/LOW 출력 뒤 핀 레벨을 다시 읽어 1/0 확인, PWM 50% 설정과 diag의 duty 50 확인, PWM 중 고장 없음, 버튼을 뗀 상태의 입력 1\n• 고장 주입(inject_fault): 출력이 고장(-5)으로 잡히고 LED가 실제로 꺼짐(읽은 값 0), 고장이 잠긴 상태로 유지, clearFault 뒤 다시 HIGH 출력으로 복구"
             }
           ]
         },
         {
-          "title": "핵심 구현",
-          "body": "• 커널 드라이버: RP1 주변장치 물리 주소(0x1f00000000)를 ioremap으로 매핑하고 io_bank0·pads_bank0 오프셋으로 GPIOn_CTRL, GPIOn_STATUS, PAD 레지스터에 접근합니다. 출력은 CTRL의 FUNCSEL·OEOVER·OUTOVER(13:12, 0x3 HIGH / 0x2 LOW)로, 입력은 PAD의 IE 비트를 켜고 STATUS 23번 비트로 읽습니다. device_create()로 /dev/ssafy_gpio를 만들고, ioctl 6개(pinMode, write, read, pwm, diag, clear fault)를 copy_from_user/copy_to_user로 주고받습니다.\n• 핀 검증과 에러코드: 헤더 핀 GPIO2~27만 허용하고, 범위 밖 핀, INPUT 핀에 출력, 값 범위 오류, PWM 채널 사용 중 같은 경우를 구분된 에러코드로 돌려줍니다.\n• hrtimer 소프트웨어 PWM: 100Hz(10ms 주기)로 ON/OFF 시간을 duty에 맞춰 다시 예약합니다. 0%와 100%는 PWM 없이 정적 출력으로 처리합니다.\n• readback 진단: 출력 핀도 PAD IE를 켜서 실제 핀 레벨을 STATUS로 다시 읽고, 명령한 값과 다르면 고장으로 잠그고 출력을 끕니다.\n• 미들웨어 API(ssafy_gpio.c): pinMode, output, input, pwm, diag 래퍼와 30ms 버튼 디바운스를 제공해, 앱은 비트 연산 없이 동작만 다룹니다.\n• fail-safe: 장치 파일이 닫힐 때(앱이 강제 종료돼도)와 rmmod 때 모든 출력을 LOW로 내리고 타이머를 정리합니다."
-        },
-        {
-          "title": "배운 점과 한계",
-          "body": "데이터시트의 레지스터부터 드라이버, API, 앱까지 계층을 직접 나눠 보니, 어느 계층이 무엇을 책임져야 하는지(비트 연산은 드라이버, 디바운스와 에러 처리는 API, 짧게/길게 판단은 앱)가 분명해졌습니다. 커널 안에서는 기다리지 않고 타이머로 나중에 실행해야 한다는 것, 사용자 공간과 커널 공간 사이에서는 데이터를 복사해야 한다는 것도 직접 확인했습니다.\n\n한계도 있습니다. readback은 핀 레벨을 읽기 때문에 단락은 잡지만 LED 선이 빠진 단선은 못 잡습니다. ioremap으로 레지스터를 직접 건드려 리눅스 pinctrl과 소유권이 겹칠 수 있어, 실제 제품이라면 device tree와 gpiod/pwm 서브시스템을 써야 합니다. 소프트웨어 PWM이라 지터가 있고, 하드웨어 PWM 블록으로 옮기면 줄일 수 있습니다."
+          "title": "배운 점",
+          "body": "드라이버를 만든다는 것은 레지스터를 움직이는 코드만이 아니라, 앱이 그 드라이버를 쓰는 약속(ioctl 번호, 구조체, 에러코드)까지 설계하는 일이라는 것을 알게 됐습니다. 계층을 나누니 비트 연산은 드라이버, 검증과 디바운스는 API, 동작 판단은 앱으로 책임이 분명해졌습니다. 커널 안에서는 기다리지 않고 타이머로 나중에 실행해야 한다는 것도 직접 확인했습니다.\n\n한계도 있습니다. readback은 핀 레벨을 읽기 때문에 단락은 잡지만 LED 선이 빠진 단선은 못 잡습니다. 레지스터를 직접 건드려 공식 pinctrl과 소유권이 겹칠 수 있어, 실제 제품이라면 device tree와 표준 GPIO/PWM 서브시스템 위에 올려야 합니다. 소프트웨어 PWM이라 지터가 있습니다."
         }
       ]
     },
