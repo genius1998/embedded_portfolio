@@ -475,7 +475,7 @@
       ],
       "links": [],
       "image": "/images/others/rpi5-gpio/thumb.webp",
-      "imageAlt": "버튼으로 LED 밝기를 제어하는 스위치 모듈. 라즈베리파이 5와 브레드보드의 버튼·LED, 밝기 20·60·100%, 스위치 앱 → GPIO 미들웨어 API → 커널 드라이버 → RP1 GPIO 레지스터 계층",
+      "imageAlt": "공식 드라이버 없이 레지스터부터 직접. 공식 경로(gpiozero/libgpiod → pinctrl-rp1)와 직접 만든 경로(스위치 앱 → GPIO 미들웨어 API → 자체 커널 드라이버 → ioremap → RP1 GPIO 레지스터) 비교, GPIO20_CTRL의 OUTOVER 13:12 비트, 버튼과 밝기가 바뀌는 LED",
       "sections": [
         {
           "title": "해 본 것",
