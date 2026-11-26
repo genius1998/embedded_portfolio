@@ -494,6 +494,10 @@
               "body": "switch_app 출력입니다. [BTN]은 버튼 눌림과 뗌, [LED]는 출력 상태와 밝기, [DTC]는 고장 보고입니다.",
               "image": "/images/others/rpi5-gpio/demo-terminal.mp4",
               "imageAlt": "switch_app 터미널 로그 영상: short press 토글, long press 밝기 단계, BUTTON_STUCK 발생과 해제"
+            },
+            {
+              "title": "API 자동 점검 (api_test)",
+              "body": "실제 라즈베리파이 5에서 모듈을 올리고 api_test를 돌려 23개 항목이 모두 통과했습니다(23 passed, 0 failed).\n\n• 입력 검증: 장치를 열기 전 호출(-1), 범위 밖 핀 1·28(-2), INPUT 핀에 출력(-3), 잘못된 모드·레벨·duty 150(-4)을 각각 구분된 에러코드로 돌려줌\n• 정상 동작: HIGH/LOW 출력 뒤 핀 레벨을 다시 읽어 1/0 확인, PWM 50% 설정과 diag의 duty 50 확인, PWM 중 고장 없음, 버튼을 뗀 상태의 입력 1\n• 고장 주입(inject_fault): 출력이 고장(-5)으로 잡히고 LED가 실제로 꺼짐(읽은 값 0), 고장이 잠긴 상태로 유지, clearFault 뒤 다시 HIGH 출력으로 복구"
             }
           ]
         },
