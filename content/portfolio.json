@@ -474,8 +474,8 @@
         "Makefile (kbuild)"
       ],
       "links": [],
-      "image": "/images/others/rpi5-gpio/architecture.svg",
-      "imageAlt": "switch_app → ssafy_gpio API → 커널 드라이버(.ko) → RP1 GPIO 레지스터 4계층 구조, 길게 누를 때의 밝기 단계 20~100%, GPIO20_CTRL의 OUTOVER 13:12 비트",
+      "image": "/images/others/rpi5-gpio/thumb.webp",
+      "imageAlt": "버튼으로 LED 밝기를 제어하는 스위치 모듈. 라즈베리파이 5와 브레드보드의 버튼·LED, 밝기 20·60·100%, 스위치 앱 → GPIO 미들웨어 API → 커널 드라이버 → RP1 GPIO 레지스터 계층",
       "sections": [
         {
           "title": "해 본 것",
