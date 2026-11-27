@@ -1,7 +1,7 @@
 {
   "site": {
     "title": "임베디드 개발자 포트폴리오",
-    "description": "STM32 2륜 밸런싱 로봇, ROS 2 로봇팔 제어, C로 만든 가상 SSD Test Shell, 리눅스 시그널 기반 펌웨어 제어 시스템을 정리한 임베디드 개발자 포트폴리오입니다.",
+    "description": "STM32 2륜 밸런싱 로봇, ROS 2 로봇팔 제어, C로 만든 가상 SSD Test Shell과 nandsim 기반 FTL, 리눅스 시그널 기반 펌웨어 제어 시스템을 정리한 임베디드 개발자 포트폴리오입니다.",
     "example": false
   },
   "profile": {
@@ -339,6 +339,107 @@
         {
           "title": "배운 점",
           "body": "• C 문자열 처리의 동작 원리: 명령어 파싱에 strtok을 쓰면서 원본 문자열을 직접 바꾸고 내부 상태를 기억한다는 점을 이해했습니다. fgets 길이 초과 처리까지 다루며 입력을 다룰 때 경계 조건부터 확인하는 습관이 생겼습니다.\n• 검증 자동화: testapp1, testapp2처럼 쓰기, 덮어쓰기, 읽기 비교를 스크립트로 반복하며 사람이 확인하던 일을 PASS/FAIL로 판정하도록 만들었습니다. 저장 중 실패 같은 예외 상황을 직접 재현해 보는 것도 검증의 일부라는 것을 배웠습니다.\n• SSD·NAND 도메인 이해: LBA 단위 읽기/쓰기, 컨트롤러와 FTL의 역할, NAND의 마모와 데이터 보존 문제를 공부하며 이 프로젝트가 실제 SSD의 어느 부분을 흉내 낸 것인지 구분할 수 있게 됐습니다.\n\n다음에는 FTL의 논리-물리 주소 매핑을 직접 구현해 보고 싶습니다."
+        }
+      ]
+    },
+    {
+      "id": "virtual-ssd-ftl-nandsim",
+      "name": "가상 SSD FTL (nandsim)",
+      "category": "SSD 펌웨어 · FTL",
+      "period": "2026.11",
+      "role": "목표·요구사항 정의, nandsim 환경 구성, VM 검증·측정 (코드 작성은 AI(Claude)와 협업)",
+      "title": "덮어쓸 수 없는 NAND 위에서\n쓴 값을 지키는 FTL",
+      "accent": "FTL",
+      "summary": "가상 SSD Test Shell의 저장 매체를 txt 파일에서 Linux nandsim(/dev/mtd0)으로 바꾸고, NAND 접근 계층과 페이지 매핑 FTL을 올렸습니다. 기존 셸 명령과 테스트를 그대로 회귀 테스트로 통과시키고, WAF·지우기 횟수·배드 블록 처리를 실측했습니다.",
+      "stack": [
+        "C",
+        "Linux MTD (nandsim)",
+        "ioctl",
+        "Makefile",
+        "셸 스크립트 테스트"
+      ],
+      "links": [
+        {
+          "label": "GitHub 브랜치",
+          "url": "https://github.com/genius1998/virtual-ssd-test-shell/tree/feature/nandsim-ftl"
+        },
+        {
+          "label": "설계 문서",
+          "url": "https://github.com/genius1998/virtual-ssd-test-shell/blob/feature/nandsim-ftl/docs/NANDSIM_FTL.md"
+        }
+      ],
+      "image": "/images/ssd-ftl/blocks.webp",
+      "imageAlt": "nandsim /dev/mtd0의 FTL 영역 블록 0~7 상태. 블록 2·5는 공장 배드, 3은 지우기 실패로 배드 처리되어 건너뛰고, 나머지 블록에 유효·무효·빈 페이지가 나뉘어 있습니다. 블록별 상태·지우기 횟수·유효 페이지 수는 VM 실측값이고, 페이지 위치는 대표화한 것입니다.",
+      "art": "none",
+      "artLabels": [
+        "/dev/mtd0 · MTD ioctl",
+        "L2P · GC · 웨어 레벨링",
+        "배드 블록 재매핑"
+      ],
+      "sections": [
+        {
+          "title": "프로젝트 배경",
+          "body": "가상 SSD Test Shell(v1)은 nand.txt 100줄을 통째로 다시 쓰는 구조라, 실제 NAND의 제약이 하나도 없었습니다. v1을 정리하며 '다음에는 FTL의 논리-물리 주소 매핑을 직접 구현해 보고 싶다'고 적었던 것을 이어서 진행한 프로젝트입니다.\n\n실제 NAND는 다음 세 가지 때문에 펌웨어(FTL)가 필요합니다.\n\n• 덮어쓰기가 안 됩니다. 지운 페이지에만 쓸 수 있고, 지우기는 페이지 64개를 묶은 블록 단위입니다.\n• 블록은 지울수록 닳습니다. 일부 블록에만 지우기가 몰리면 그 블록부터 수명이 끝납니다.\n• 처음부터 불량인 블록이 있고, 쓰는 도중에 새로 불량이 되는 블록도 생깁니다.\n\n그래서 저장 매체를 Linux 커널의 NAND 시뮬레이터 nandsim(/dev/mtd0)으로 바꾸고, 이 규칙을 지키면서 '쓴 값이 그대로 읽히는' 페이지 매핑 FTL을 만들었습니다. 기존 셸 명령(write, read, fullwrite, fullread, testapp1, testapp2)은 그대로 두어 v1 테스트가 회귀 테스트가 되도록 했습니다. 기존 프로젝트는 별도로 남겨 두었습니다."
+        },
+        {
+          "title": "구현 범위",
+          "body": "구현한 것\n• NAND 접근 계층: 페이지 읽기·프로그램, 블록 지우기, 배드 블록 확인·표시 (MTD ioctl)\n• 고장을 주입할 수 있는 NAND 시뮬레이터 백엔드 (nandsim이 없는 환경·CI용)\n• 페이지 매핑 FTL: L2P 테이블, 무효 페이지 추적, Greedy GC\n• 웨어 레벨링: 동적(지우기 적은 블록 우선), 정적(차이가 임계값을 넘으면 콜드 블록 이동)\n• 배드 블록: 공장 배드 건너뛰기, 지우기·프로그램 실패 시 데이터 옮기고 배드 표시\n• 메타데이터·데이터 CRC로 무결성 검사\n• 새 명령 ssd S(통계), ssd F(포맷), Test Shell testapp3, stats\n\n구현하지 않은 것\n• 매핑 테이블 체크포인트 (실행마다 영역을 스캔해 복원)\n• 읽기 방해·데이터 보존(retention) 관리, 읽기 재시도\n• 성능 측정 (nandsim에는 타이밍 모델이 없어 속도는 지표에서 제외)\n• 전원 차단 재현 (복사 후 지우기 순서로 설계만 대비)"
+        },
+        {
+          "title": "구조",
+          "body": "네 층으로 나눴습니다.\n\n• TestShell (호스트): v1과 같은 명령에 testapp3, stats를 더했습니다.\n• ssd (호스트 인터페이스): 인자를 검증하고 W/R/S/F 명령을 FTL에 넘깁니다.\n• FTL (ftl.c): LBA를 NAND 페이지에 매핑하고, GC·웨어 레벨링·배드 블록을 관리합니다.\n• NAND 접근 계층 (nand.c): MTD 백엔드는 /dev/mtd0에 ioctl과 pread/pwrite로 접근하고, SIM 백엔드는 이미지 파일로 같은 규칙을 흉내 냅니다. 환경 변수 SSD_NAND로 고릅니다.\n\nnandsim은 256MiB(블록 2048개 × 128KiB, 페이지 2KiB)로 띄우고, FTL은 그중 블록 0~7만 씁니다. LBA가 100개뿐이라 영역을 작게 잡아야 GC와 웨어 레벨링이 실제로 돕니다.",
+          "image": "/images/ssd-ftl/arch.webp",
+          "imageAlt": "TestShell → ssd → FTL → NAND 접근 계층(MTD /dev/mtd0, SIM nand.img)으로 이어지는 v2 구조와 nandsim 설정, 블록 배치"
+        },
+        {
+          "title": "내가 한 일",
+          "body": "• 고도화 목표와 요구사항 정의: nandsim을 저장 매체로, MTD ioctl 기반 NAND 접근 계층 + 페이지 매핑 FTL(L2P, 무효 페이지, GC, 웨어 레벨링, 배드 블록 재매핑), 기존 셸 명령 유지, 지표는 속도 대신 무결성·WAF·지우기 횟수 분포\n• Ubuntu 22.04 VirtualBox VM에 nandsim 구성: ID 바이트로 256MiB NAND를 만들고 flash_erase, nandwrite, nanddump로 동작 확인\n• VM에서 빌드·회귀 테스트·testapp3 측정, nandsim 모듈 파라미터로 배드 블록을 주입해 재매핑 확인\n\n코드(nand.c, ftl.c, 테스트 스크립트)는 AI(Claude)와 협업해 작성했습니다. 제가 정한 요구사항에 맞춰 AI가 구현하고, 저는 실제 nandsim 위에서 실행해 결과를 확인했습니다."
+        },
+        {
+          "title": "핵심 구현",
+          "body": "NAND 규칙을 지키면서 데이터를 잃지 않게 하는 네 가지를 정리했습니다.",
+          "subsections": [
+            {
+              "title": "NAND 접근 계층 (MTD ioctl)",
+              "body": "FTL은 read_page, program_page, erase_block, is_bad, mark_bad 다섯 함수만 씁니다. MTD 백엔드는 이 함수들을 /dev/mtd0에 연결합니다.\n\n• 장치 정보: MEMGETINFO로 페이지 크기, 블록 크기, 전체 크기를 읽습니다.\n• 지우기: MEMERASE. 실패(EIO)하면 FTL에 '배드로 처리하라'고 알립니다.\n• 배드 블록: MEMGETBADBLOCK으로 확인하고 MEMSETBADBLOCK으로 표시합니다.\n• 읽기·쓰기: 페이지 단위 pread/pwrite.\n\n같은 인터페이스의 SIM 백엔드는 지우지 않은 페이지에 다시 쓰면 오류를 내서 FTL 버그를 바로 드러내고, 공장 배드·지우기 실패·프로그램 실패를 환경 변수로 주입합니다. 이름은 nandsim 모듈 파라미터(badblocks, weakblocks, weakpages)와 맞췄습니다."
+            },
+            {
+              "title": "페이지 매핑과 재실행 시 복원",
+              "body": "ssd는 명령 하나마다 새로 실행되는 프로그램이라, 매핑 테이블을 메모리에 들고 있을 수 없습니다. 그래서 정보를 NAND 안에만 둡니다.\n\n• page 0: 블록 헤더 (지우기 횟수, CRC). 지운 직후에 기록합니다.\n• page 1~63: 앞부분에 LBA, 전역 쓰기 순번(seq), 누적 통계, CRC와 값을 기록합니다.\n\n실행할 때마다 영역의 블록을 스캔해 LBA별로 seq가 가장 큰 페이지를 최신으로 보고 L2P를 다시 만듭니다. 같은 LBA를 덮어쓰면 새 페이지에 쓰고 이전 페이지는 무효로 처리합니다. VM에서 이 마운트 스캔을 포함한 ssd 1회 실행은 16ms였습니다."
+            },
+            {
+              "title": "GC와 웨어 레벨링",
+              "body": "빈 블록이 1개 이하로 떨어지면 GC를 시작합니다. 유효 페이지가 가장 적은 블록을 골라(Greedy) 유효 페이지만 현재 블록으로 복사한 뒤 지웁니다. 복사가 끝난 뒤에만 지우기 때문에, 중간에 끊겨도 seq가 큰 사본이 남습니다.\n\n웨어 레벨링은 두 가지입니다.\n• 동적: 빈 블록 중 지우기 횟수가 가장 적은 블록부터 씁니다.\n• 정적: 바뀌지 않는 콜드 데이터가 지우기 횟수 적은 블록을 붙잡고 있으면, 차이가 임계값을 넘을 때 그 블록을 GC 대상으로 골라 옮깁니다."
+            },
+            {
+              "title": "배드 블록 처리",
+              "body": "• 공장 배드: 마운트할 때 MEMGETBADBLOCK으로 확인해 아예 쓰지 않습니다.\n• 지우기 실패: MEMSETBADBLOCK으로 표시하고 다음 빈 블록을 씁니다.\n• 프로그램 실패: 그 블록에 이미 있던 유효 페이지를 다른 블록으로 옮긴(재매핑) 뒤 배드로 표시하고, 실패한 쓰기를 다시 합니다."
+            }
+          ]
+        },
+        {
+          "title": "어려웠던 문제와 해결 과정",
+          "body": "개발과 VM 검증 중에 실제로 부딪힌 두 가지입니다.",
+          "subsections": [
+            {
+              "title": "값이 깨졌는데 오류 없이 0x00000000이 읽힘",
+              "body": "처음에는 페이지 메타데이터와 값을 CRC 하나로 묶었습니다. 무결성 테스트에서 이미지 파일의 값 1바이트를 일부러 바꿨더니, 읽기 오류가 나야 하는데 종료 코드 0과 함께 0x00000000이 읽혔습니다.\n\n원인은 마운트 단계였습니다. CRC가 틀린 페이지는 '어느 LBA인지 믿을 수 없는 페이지'로 보고 건너뛰었기 때문에, 그 LBA는 한 번도 쓰지 않은 것으로 처리됐습니다. 데이터가 깨진 것을 조용히 숨긴 셈입니다.\n\nCRC를 둘로 나눴습니다. 메타데이터 CRC(LBA, seq 등)는 마운트 때 매핑을 만들 때 쓰고, 값 CRC는 읽을 때 검사합니다. 이제 값이 깨지면 매핑은 유지된 채 읽기에서 DATA INTEGRITY ERROR (CRC)로 실패하고, 테스트도 이 경우를 검사합니다."
+            },
+            {
+              "title": "nandsim에서 테스트가 멈춘 것처럼 보임",
+              "body": "VM에서 Test Shell 회귀 테스트를 돌리자 화면에 아무것도 안 나와 중간에 멈췄습니다. 멈춘 시점의 ssd S 통계를 보니 host_writes 138, mapped 100, GC 0회로, fullwrite가 끝나고 testapp1이 진행 중이었습니다. 무한 루프나 오류의 흔적은 없었습니다.\n\nssd 1회 실행 시간을 재 보니 16ms였고, 테스트를 끝까지 기다리자 14.2초 만에 PASS가 나왔습니다. 시나리오 하나가 ssd를 수백 번 실행하는데, 스크립트가 출력을 모아서 마지막에 비교하는 구조라 도중에 화면이 조용했던 것입니다. 속도는 고치지 않고 그대로 두었습니다."
+            }
+          ]
+        },
+        {
+          "title": "결과",
+          "body": "Ubuntu 22.04 VirtualBox VM(kernel 6.8, nandsim 256MiB)에서 측정했습니다.\n\n회귀 테스트 (v1 테스트를 /dev/mtd0 위에서)\n• test_ssd.sh 32/32 PASS (CRC 손상 4항목은 이미지 파일 전용이라 제외)\n• test_testshell.sh 시나리오 23줄 출력 일치\n\ntestapp3: LBA 0~9에 80%가 몰리는 무작위 덮어쓰기 2000회, 500회마다 100개 LBA 전체 비교\n• 정상 블록 8개: 불일치 0, NAND 쓰기 2195회, WAF 1.097, GC 28회, 지우기 횟수 11~12\n• 배드 블록 3개 주입(badblocks=2,5, weakblocks=3:2): 불일치 0, NAND 쓰기 2630회, WAF 1.315, GC 39회, 지우기 횟수 8~9\n\n배드 블록 실험에서 블록 2·5는 처음부터 제외되고, 블록 3은 지우기 2회 뒤 실패해 배드로 표시됐습니다. 쓸 수 있는 블록이 8개에서 5개로 줄자 GC가 유효 페이지를 더 많이 옮겨 WAF가 1.097에서 1.315로 올랐습니다. 지우기 횟수 차이는 두 경우 모두 1이었습니다.\n\n배드 블록 실험은 같은 조건으로 SIM 백엔드에서 돌린 결과와 숫자가 똑같았습니다. FTL 동작이 저장 백엔드와 상관없이 같다는 것도 확인한 셈입니다.",
+          "image": "/images/ssd-ftl/blocks.webp",
+          "imageAlt": "배드 블록 3개 주입 실험 후 블록 0~7의 상태 (VM 실측, 페이지 위치는 대표화)"
+        },
+        {
+          "title": "한계와 다음 단계",
+          "body": "• LBA 100개, LBA당 10바이트라 2KiB 페이지를 거의 비워 씁니다. 실제 FTL처럼 4KiB 섹터 여러 개를 한 페이지에 모으는 구조는 아닙니다.\n• 매핑 테이블을 체크포인트 없이 매번 스캔으로 복원해, 영역이 커지면 실행 시간이 늘어납니다.\n• 프로그램 실패(weakpages)와 정적 웨어 레벨링은 SIM 백엔드에서만 확인했고, VM에서는 아직 실험하지 않았습니다.\n• 전원 차단은 설계로만 대비했고 재현하지 않았습니다.\n\n다음에는 nandsim weakpages로 프로그램 실패를 재현하고, 매핑 테이블 체크포인트를 넣어 마운트 시간을 줄여 보고 싶습니다."
         }
       ]
     },
