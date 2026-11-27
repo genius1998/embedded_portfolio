@@ -479,7 +479,13 @@
       "sections": [
         {
           "title": "프로젝트 배경",
-          "body": "회사에서는 자체 제작한 외부 장치를 보드에 붙여 인식하고 제어하는 경우가 많습니다. 이 상황을 라즈베리파이 5에서 재현하기 위해, 공식 GPIO 드라이버(pinctrl-rp1)를 쓰지 않고 RP1 GPIO 레지스터를 직접 제어하는 드라이버를 만들었습니다. SSAFY 임베디드 리눅스 커널 과정(3일)에서 배운 드라이버 실습을 바탕으로 한 개인 프로젝트이고, 왜 이런 구조가 필요한지 아래 순서로 정리했습니다.",
+          "body": "회사에서는 자체 제작한 외부 장치를 보드에 붙여 인식하고 제어하는 경우가 많습니다. 이 상황을 라즈베리파이 5에서 재현하기 위해, 공식 GPIO 드라이버(pinctrl-rp1)를 쓰지 않고 RP1 GPIO 레지스터를 직접 제어하는 드라이버를 만들었습니다. SSAFY 임베디드 리눅스 커널 과정(3일)에서 배운 드라이버 실습을 바탕으로 한 개인 프로젝트이고, 왜 이런 구조가 필요한지는 다음 장에 정리했습니다.",
+          "image": "/images/others/rpi5-gpio/layer-compare.webp",
+          "imageAlt": "하드웨어 제어 계층 비교. 라즈베리파이 5는 앱, 미들웨어 API, 시스템 콜 경계(ioctl, 메모리 보호), 디바이스 드라이버(.ko), ioremap, RP1 GPIO 핀 순서로 내려가고, STM32는 펌웨어가 HAL이나 레지스터로 GPIO 핀을 바로 제어한다. 둘 다 데이터시트의 레지스터를 직접 제어한다는 원리는 같다."
+        },
+        {
+          "title": "왜 커널을 빌드하는가?",
+          "body": "\"레지스터는 앱에서 바로 쓰면 되지 않을까?\"라는 질문에서 출발해, 하드웨어 제어에 왜 커널 안의 드라이버가 필요하고, 그 드라이버를 넣기 위해 왜 커널을 빌드해야 하는지 순서대로 정리했습니다.",
           "subsections": [
             {
               "title": "커널이라는 장벽",
@@ -498,12 +504,10 @@
             {
               "title": "전체 시스템 구조",
               "body": "앱이 /dev/ssafy_gpio를 열고 ioctl(fd, 명령, &구조체)를 부르면 시스템 콜로 커널에 들어갑니다. 커널(VFS)은 드라이버가 등록해 둔 함수 목록표인 file_operations(fops)를 보고 드라이버의 ioctl 함수를 호출합니다. 드라이버는 앱이 넘긴 구조체를 copy_from_user()로 가져와 ioremap한 레지스터를 제어하고, 결과는 copy_to_user()로 돌려줍니다. 앱과 드라이버 사이를 오가는 것은 직접 정의한 ioctl 구조체이고, fops는 그 요청을 어느 함수로 보낼지 정하는 표입니다.",
-              "image": "/images/others/rpi5-gpio/app-devicefile-driver.webp",
-              "imageAlt": "앱(App)과 장치 파일(Device File)이 요청과 응답을 주고받고, 장치 파일은 커널 공간(Kernel space)의 디바이스 드라이버(Device Driver)와 연결된 관계도"
+              "image": "/images/others/rpi5-gpio/system-flow.webp",
+              "imageAlt": "앱 요청이 레지스터까지 가는 길. 사용자 공간의 스위치 앱, GPIO 미들웨어 API, ioctl 호출과 직접 정의한 ioctl 구조체가 시스템 콜 경계를 넘어 커널 공간의 장치 파일 /dev/ssafy_gpio, VFS, fops 함수 목록표(.unlocked_ioctl)를 거쳐 드라이버 ioctl 함수로 가고, copy_from_user와 copy_to_user로 구조체를 주고받으며, ioremap된 레지스터를 통해 RP1 GPIO20 LED와 GPIO2 버튼을 제어한다"
             }
-          ],
-          "image": "/images/others/rpi5-gpio/layer-compare.webp",
-          "imageAlt": "하드웨어 제어 계층 비교. 라즈베리파이 5는 앱, 미들웨어 API, 시스템 콜 경계(ioctl, 메모리 보호), 디바이스 드라이버(.ko), ioremap, RP1 GPIO 핀 순서로 내려가고, STM32는 펌웨어가 HAL이나 레지스터로 GPIO 핀을 바로 제어한다. 둘 다 데이터시트의 레지스터를 직접 제어한다는 원리는 같다."
+          ]
         },
         {
           "title": "구현 범위",
