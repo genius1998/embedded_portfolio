@@ -15,9 +15,9 @@ function ProjectMark({ project }: { project: Project }) {
     <text x="70" y="36" fontSize="8" fill="currentColor" opacity=".7" fontFamily="var(--font-mono), monospace">rear ← add</text>
     <text x="70" y="50" fontSize="7" fill="currentColor" opacity=".5" fontFamily="var(--font-mono), monospace">queue[100]</text>
   </svg>;
-  if (project.art === "nand") return <svg className="nand-mark" viewBox="0 0 132 64" role="img" aria-label="nand.txt의 LBA 0~99 100칸을 모두 쓰고 읽어 비교해 PASS">
+  if (project.art === "nand") return <svg className="nand-mark" viewBox="0 0 132 64" role="img" aria-label="NAND의 LBA 0~99 100칸을 모두 쓰고 읽어 비교해 PASS">
     {Array.from({ length: 100 }, (_, k) => <rect key={k} x={2 + (k % 10) * 6} y={2 + Math.floor(k / 10) * 6} width="5" height="5" rx="0.6" fill="var(--signal)" opacity={0.35 + 0.65 * ((k % 10) + Math.floor(k / 10)) / 18} />)}
-    <text x="70" y="14" fontSize="7" fill="currentColor" opacity=".6" fontFamily="var(--font-mono), monospace">nand.txt</text>
+    <text x="70" y="14" fontSize="7" fill="currentColor" opacity=".6" fontFamily="var(--font-mono), monospace">NAND</text>
     <text x="70" y="25" fontSize="7" fill="currentColor" opacity=".6" fontFamily="var(--font-mono), monospace">LBA 0–99</text>
     <text x="70" y="44" fontSize="9" fill="currentColor" fontWeight="700" fontFamily="var(--font-mono), monospace">W → R</text>
     <text x="70" y="58" fontSize="11" fill="var(--signal)" fontWeight="800" fontFamily="var(--font-mono), monospace">PASS</text>

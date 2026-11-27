@@ -126,6 +126,6 @@ export function ProjectArt({ project }: { project: Project }) {
       <div className={`art-fallback art-fallback-${project.art}`} aria-hidden="true"><i /><i /><i /></div>
       {project.artLabels.map((label, i) => <span className="art-label" key={i} style={{ "--i": i } as CSSProperties}><b className="num">{String(i + 1).padStart(2, "0")}</b>{label}</span>)}
     </LightField>
-    {project.art === "signal" ? <figcaption><span className="num">CIRCULAR QUEUE / FRONT · REAR</span><span>add → rear에 넣기, del → front 채굴기 cancel·join 뒤 front 이동</span></figcaption> : project.art === "nand" ? <figcaption><span className="num">NAND.TXT / LBA 0–99</span><span>testapp1: 전체 쓰기 → 읽어서 비교 → PASS</span></figcaption> : <figcaption><span className="num">{project.art.toUpperCase()} / ABSTRACT STUDY</span><span>장식용 추상 그래픽</span></figcaption>}
+    {project.art === "signal" ? <figcaption><span className="num">CIRCULAR QUEUE / FRONT · REAR</span><span>add → rear에 넣기, del → front 채굴기 cancel·join 뒤 front 이동</span></figcaption> : project.art === "nand" ? <figcaption><span className="num">NAND / LBA 0–99</span><span>testapp1: 전체 쓰기 → 읽어서 비교 → PASS</span></figcaption> : <figcaption><span className="num">{project.art.toUpperCase()} / ABSTRACT STUDY</span><span>장식용 추상 그래픽</span></figcaption>}
   </figure>;
 }

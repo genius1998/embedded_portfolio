@@ -251,15 +251,17 @@
       "id": "virtual-ssd-test-shell",
       "name": "가상 SSD Test Shell",
       "category": "임베디드 C언어",
-      "period": "2026.10",
-      "role": "설계, 구현, 테스트",
+      "period": "2026.10 – 2026.11",
+      "role": "설계, 구현, 테스트 (ftl.c·nand.c는 AI와 협업)",
       "title": "NAND에 쓴 값이 그대로\n읽히는지 검증하는 셸",
       "accent": "검증",
-      "summary": "txt 파일로 NAND를 대신한 가상 SSD를 C로 만들고, LBA 단위 읽기·쓰기를 명령으로 내려 자동으로 PASS/FAIL을 판정하는 Test Shell을 함께 만들었습니다.",
+      "summary": "Linux nandsim으로 만든 가상 NAND 위에서 동작하는 가상 SSD를 C로 만들고, LBA 단위 읽기·쓰기를 명령으로 내려 자동으로 PASS/FAIL을 판정하는 Test Shell을 함께 만들었습니다. NAND는 덮어쓸 수 없어서, LBA를 NAND의 실제 위치로 바꿔 주는 페이지 매핑 FTL을 넣었습니다.",
       "stack": [
         "C",
-        "Eclipse CDT",
-        "Windows"
+        "Linux MTD (nandsim)",
+        "ioctl",
+        "Ubuntu VM",
+        "셸 스크립트 테스트"
       ],
       "links": [
         {
@@ -267,7 +269,7 @@
           "url": "https://github.com/genius1998/virtual-ssd-test-shell"
         },
         {
-          "label": "v2 브랜치 (nandsim)",
+          "label": "nandsim·FTL 코드",
           "url": "https://github.com/genius1998/virtual-ssd-test-shell/tree/feature/nandsim-ftl"
         }
       ],
@@ -282,31 +284,31 @@
       "sections": [
         {
           "title": "프로젝트 배경",
-          "body": "SSAFY 임베디드 C언어 과정의 SSD Test Shell 과제입니다.\n\nSSD에서 호스트(PC)는 'LBA 3번에 이 값을 써라', 'LBA 3번을 읽어라'처럼 논리 주소(LBA, Logical Block Address)로만 요청합니다. 논리 주소를 NAND의 물리 위치로 바꾸고 실제로 읽고 쓰는 일은 SSD 내부의 컨트롤러와 펌웨어(FTL)가 맡습니다.\n\n이 과정에서 read/write 결과가 틀어질 수 있는 원인은 크게 세 가지입니다.\n\n• NAND의 물리적 한계: 셀은 쓰고 지우기(P/E cycle)를 반복할수록 닳고, 시간이 지나면 전하가 빠지며(retention), 이웃 셀을 반복해서 읽는 것만으로도 영향을 받습니다(read disturb).\n• 덮어쓰기가 안 되는 구조: NAND는 지운 뒤에만 쓸 수 있고 지우는 단위(블록)가 쓰는 단위(페이지)보다 큽니다. 그래서 펌웨어가 매핑, 가비지 컬렉션, 웨어 레벨링을 관리해야 하고, 여기에 버그가 있으면 다른 데이터나 예전 데이터가 읽힙니다.\n• 경계 조건과 예외 상황: 범위 밖 LBA, 형식이 틀린 요청, 쓰는 도중의 전원 차단 등을 제대로 처리하지 못하면 데이터가 깨집니다.\n\n펌웨어가 바뀔 때마다 '쓴 값이 그대로 읽히는지'를 전체 영역과 경계 조건까지 다시 확인해야 하고, 이 반복 작업을 자동화하는 것이 테스트 셸과 테스트 시나리오의 역할입니다. 이 프로젝트는 그 흐름 중 호스트 쪽, 즉 명령을 내리고 결과를 비교하는 부분을 작은 규모로 구현한 것입니다.",
+          "body": "SSAFY 임베디드 C언어 과정의 SSD Test Shell 과제입니다.\n\nSSD에서 호스트(PC)는 'LBA 3번에 이 값을 써라', 'LBA 3번을 읽어라'처럼 논리 주소(LBA, Logical Block Address)로만 요청합니다. 논리 주소를 NAND의 물리 위치로 바꾸고 실제로 읽고 쓰는 일은 SSD 내부의 컨트롤러와 펌웨어(FTL)가 맡습니다.\n\n이 과정에서 read/write 결과가 틀어질 수 있는 원인은 크게 세 가지입니다.\n\n• NAND의 물리적 한계: 셀은 쓰고 지우기(P/E cycle)를 반복할수록 닳고, 시간이 지나면 전하가 빠지며(retention), 이웃 셀을 반복해서 읽는 것만으로도 영향을 받습니다(read disturb).\n• 덮어쓰기가 안 되는 구조: NAND는 지운 뒤에만 쓸 수 있고 지우는 단위(블록)가 쓰는 단위(페이지)보다 큽니다. 그래서 펌웨어가 매핑, 가비지 컬렉션, 웨어 레벨링을 관리해야 하고, 여기에 버그가 있으면 다른 데이터나 예전 데이터가 읽힙니다.\n• 경계 조건과 예외 상황: 범위 밖 LBA, 형식이 틀린 요청, 쓰는 도중의 전원 차단 등을 제대로 처리하지 못하면 데이터가 깨집니다.\n\n펌웨어가 바뀔 때마다 '쓴 값이 그대로 읽히는지'를 전체 영역과 경계 조건까지 다시 확인해야 하고, 이 반복 작업을 자동화하는 것이 테스트 셸과 테스트 시나리오의 역할입니다. 이 프로젝트는 그 흐름을 작은 규모로 구현했습니다. 호스트 쪽(명령을 내리고 결과를 비교하는 Test Shell)과, 그 아래에서 LBA를 NAND에 저장하는 쪽(가상 SSD와 FTL)을 함께 만들었습니다.\n\n개발은 두 단계로 진행했습니다. 먼저 저장 매체를 텍스트 파일(nand.txt)로 두고 명령·검증 흐름을 완성했습니다. 그다음 NAND의 규칙을 지키도록 저장 매체를 Linux 커널의 NAND 시뮬레이터 nandsim(/dev/mtd0)으로 옮기고 FTL을 넣었습니다. Test Shell의 명령과 출력은 그대로 두어 처음 만든 테스트를 계속 회귀 테스트로 썼습니다.",
           "image": "/images/ssd/error-points.webp",
-          "imageAlt": "실제 SSD의 데이터 흐름과 오류가 생길 수 있는 지점 (개념도). 이 프로젝트는 그림 속 FTL과 NAND 내부 동작을 구현하지 않았습니다."
+          "imageAlt": "실제 SSD의 데이터 흐름과 오류가 생길 수 있는 지점 (개념도)"
         },
         {
           "title": "구현 범위",
-          "body": "구현한 것\n• 파일 기반 LBA 저장 (nand.txt, LBA 0~99)\n• W / R 명령 처리와 종료 코드\n• Test Shell의 명령 입력, 파싱, 외부 프로세스 실행\n• Test Shell과 가상 SSD 양쪽의 입력 검증\n• 임시 파일을 거치는 저장, NAND 파일 형식 검사\n• 자동 검증 시나리오 testapp1, testapp2\n\n구현하지 않은 것\n• NAND 페이지 쓰기, 블록 지우기\n• FTL의 논리-물리 주소 매핑\n• 가비지 컬렉션, 웨어 레벨링\n• ECC 등 오류 정정\n• 실제 SSD 하드웨어 제어, 전원 차단 복구\n\n실제 SSD에서 LBA 하나는 보통 512바이트나 4KiB 섹터를 가리킵니다. 이 프로젝트에서는 LBA 하나에 32비트 값 하나(0x + 16진수 8자리 텍스트)만 저장하도록 단순화했습니다.\n\nv2에서는 위의 '구현하지 않은 것' 중 NAND 페이지 쓰기·블록 지우기, 주소 매핑, 가비지 컬렉션, 웨어 레벨링을 Linux nandsim 위에 추가했습니다. 아래 'v2: nandsim으로 확장'에 정리했습니다."
+          "body": "구현한 것\n• 가상 NAND: nandsim(/dev/mtd0, 256MiB, 블록 128KiB, 페이지 2KiB) 중 블록 0~7 사용\n• NAND 접근 계층(nand.c): 페이지 읽기·쓰기, 블록 지우기, 불량 블록 확인·표시\n• 페이지 매핑 FTL(ftl.c): LBA → NAND 위치 번역표(L2P), 무효 페이지 추적, GC, 웨어 레벨링, 불량 블록 처리, CRC 무결성 검사\n• 가상 SSD(ssd.c): W / R 명령 처리와 종료 코드, 통계(S)·포맷(F)\n• Test Shell: 명령 입력, 파싱, 외부 프로세스 실행\n• Test Shell과 가상 SSD 양쪽의 입력 검증\n• 자동 검증 시나리오 testapp1, testapp2, testapp3\n\n구현하지 않은 것\n• 실제 SSD 하드웨어 제어 (PC 프로그램으로 펌웨어 동작을 흉내 냄)\n• 속도 측정 (nandsim에는 속도 모델이 없음)\n• 전원 차단 재현, 읽기 방해·데이터 보존 관리\n\n실제 SSD에서 LBA 하나는 보통 512바이트나 4KiB 섹터를 가리킵니다. 이 프로젝트에서는 LBA 0~99에 32비트 값 하나(0x + 16진수 8자리 텍스트)씩만 저장하도록 단순화했습니다."
         },
         {
           "title": "구조",
-          "body": "역할을 세 개로 나눴습니다.\n\n• Test Shell (호스트): 사용자 명령을 받아 검증한 뒤 ssd를 실행하고, 종료 코드와 result.txt로 결과를 받습니다.\n• ssd (컨트롤러): 한 번 실행에 명령 하나(W 또는 R)를 처리합니다.\n• nand.txt (NAND): 100줄짜리 파일로, 줄 번호가 곧 LBA입니다. 값은 0x + 대문자 HEX 8자리이고, 쓴 적 없는 LBA는 0x00000000입니다.\n\nTest Shell 명령은 write, read, fullwrite, fullread, testapp1, testapp2, help, exit입니다.",
-          "image": "/images/ssd/architecture.webp",
-          "imageAlt": "Test Shell이 ssd를 실행하고, ssd가 nand.txt에 저장하고 result.txt로 읽은 값을 돌려주는 구조"
+          "body": "역할을 네 층으로 나눴습니다. 실제 SSD에 대응시키면 Test Shell이 호스트, ssd와 FTL이 펌웨어, nandsim이 NAND 칩입니다.\n\n• Test Shell (호스트): 사용자 명령을 받아 검증한 뒤 ssd를 실행하고, 종료 코드와 result.txt로 결과를 받습니다.\n• ssd (명령 처리): 한 번 실행에 명령 하나(W 또는 R)를 처리합니다.\n• ftl.c (FTL): 'LBA 3은 지금 블록 5 페이지 12에 있다'는 번역표를 관리하고, GC·웨어 레벨링·불량 블록을 처리합니다.\n• nand.c (NAND 접근 계층): pread/pwrite와 ioctl(MEMERASE, MEMGETBADBLOCK, MEMSETBADBLOCK)로 nandsim을 읽고, 쓰고, 지웁니다.\n\nTest Shell 명령은 write, read, fullwrite, fullread, testapp1~3, stats, help, exit입니다.",
+          "image": "/images/ssd-ftl/arch.webp",
+          "imageAlt": "TestShell → ssd → FTL → NAND 접근 계층 → nandsim(/dev/mtd0)으로 이어지는 구조와 nandsim 설정, 블록 배치"
         },
         {
           "title": "내가 한 일",
-          "body": "• nand.txt 저장 형식과 저장 방식 설계\n• Test Shell 구현: 명령 반복 입력, ssd 실행, 종료 코드로 성공 판단\n• 셸과 ssd 양쪽의 입력 검증\n• 자동 테스트 testapp1(전체 쓰기 후 100칸 비교), testapp2(LBA 0~5에 30회 쓰기 후 덮어쓰기, 마지막 값 비교)"
+          "body": "• 전체 구조 설계: Test Shell / ssd / FTL / NAND 접근 계층으로 역할 분리, 무엇을 지표로 볼지(무결성, WAF, 블록별 지우기 횟수) 결정\n• Test Shell 구현: 명령 반복 입력, ssd 실행, 종료 코드로 성공 판단\n• 셸과 ssd 양쪽의 입력 검증\n• 자동 테스트 testapp1(전체 쓰기 후 100칸 비교), testapp2(LBA 0~5에 30회 쓰기 후 덮어쓰기, 마지막 값 비교)\n• Ubuntu VM에 nandsim을 구성하고 빌드·회귀 테스트·측정, 불량 블록을 일부러 넣어 동작 확인\n\nftl.c와 nand.c, testapp3는 AI(Claude)와 협업해 작성했습니다. 제가 정한 요구사항에 맞춰 AI가 구현하고, 저는 nandsim 위에서 실행해 결과를 확인했습니다."
         },
         {
           "title": "핵심 구현",
-          "body": "직접 설계하고 구현한 부분 중 데이터를 지키고 잘못된 입력을 막는 세 가지를 정리했습니다.",
+          "body": "데이터를 지키고 잘못된 입력을 막는 부분을 정리했습니다.",
           "subsections": [
             {
-              "title": "저장 도중 실패해도 기존 데이터 지키기",
-              "body": "쓰기 한 번마다 nand.txt 100줄을 통째로 다시 저장하는 구조라, 쓰는 도중에 실패하면 기존 데이터까지 잃을 수 있었습니다.\n\n그래서 nand.txt.tmp에 100줄을 먼저 모두 쓰고, fprintf와 fclose가 모두 성공했을 때만 원본과 교체했습니다. 중간에 실패하면 임시 파일만 지우고 원본은 그대로 둡니다. Windows의 rename()은 대상 파일이 있으면 실패하기 때문에 원본을 지운 뒤 이름을 바꿨습니다.\n\n불러올 때도 값이 정확히 100개이고 모두 형식이 맞을 때만 받아들이고, 아니면 NAND FILE ERROR로 멈추게 했습니다. 깨진 파일 위에 이어서 쓰지 않기 위해서입니다."
+              "title": "덮어쓸 수 없는 NAND에 쓰기 (FTL)",
+              "body": "NAND는 이미 쓴 페이지에 다시 쓸 수 없고, 지우기는 페이지 64개짜리 블록 단위입니다. LBA를 같은 자리에 덮어쓰려면 블록 전체를 지워야 하고, 그러면 한 블록만 닳고 지우는 도중 꺼지면 다른 LBA까지 잃습니다.\n\n그래서 FTL은 덮어쓰지 않고 빈 페이지에 새로 쓴 뒤 번역표를 고치고, 옛 페이지는 무효로 표시합니다.\n• GC: 빈 블록이 모자라면 무효 페이지가 많은 블록에서 살아 있는 페이지만 옮기고 지웁니다. 옮긴 뒤에만 지우므로 중간에 끊겨도 데이터가 남습니다.\n• 웨어 레벨링: 덜 지운 블록부터 써서 고르게 닳게 합니다.\n• 불량 블록: 처음부터 불량인 블록은 건너뛰고, 지우기나 쓰기에 실패한 블록은 데이터를 옮긴 뒤 불량으로 표시합니다.\n• 번역표 복원: ssd는 명령마다 새로 실행되어 표를 기억할 수 없습니다. 그래서 페이지마다 'LBA 몇 번, 몇 번째 쓰기'를 함께 적고, 실행할 때마다 NAND를 훑어 표를 다시 만듭니다."
             },
             {
               "title": "셸과 SSD 양쪽에서 입력 검증",
@@ -326,7 +328,7 @@
           "subsections": [
             {
               "title": "저장 과정의 안정성",
-              "body": "nand.txt를 바로 \"w\" 모드로 열면 그 순간 기존 내용이 비워지기 때문에, 쓰는 도중 실패하면 데이터 전체가 사라집니다. 그래서 nand.txt.tmp에 먼저 다 쓴 뒤 원본과 교체하도록 바꿨습니다.\n\n실패하는 시점에 따라 결과는 다음과 같습니다.\n\n• .tmp 쓰기나 fclose()가 실패하면: .tmp만 지워지고 기존 nand.txt는 그대로 남습니다.\n• 기존 nand.txt 삭제가 실패하면: 교체를 멈추고 기존 파일을 유지합니다.\n• 삭제한 뒤 rename()이 실패하거나 그 사이에 프로그램이 종료되면: nand.txt는 없고 .tmp에만 데이터가 남습니다.\n\n마지막 경우는 아직 남은 위험입니다. 다음 실행에서 loadNAND()는 nand.txt가 없으면 빈 SSD로 처리해 모든 값이 0x00000000으로 읽히고, 그 상태로 쓰면 .tmp까지 새 내용으로 덮여 이전 데이터를 되살릴 수 없습니다. Linux에서 nand.txt를 지우고 .tmp만 남긴 상태를 만들어 이 동작을 직접 확인했습니다. 또 fclose()는 OS 버퍼까지만 보장하므로, 전원이 꺼지는 상황까지 이 구조로 막을 수는 없습니다."
+              "body": "저장 매체가 nand.txt였던 단계에서, 파일을 바로 \"w\" 모드로 열면 그 순간 기존 내용이 비워지기 때문에, 쓰는 도중 실패하면 데이터 전체가 사라집니다. 그래서 nand.txt.tmp에 먼저 다 쓴 뒤 원본과 교체하도록 바꿨습니다.\n\n실패하는 시점에 따라 결과는 다음과 같습니다.\n\n• .tmp 쓰기나 fclose()가 실패하면: .tmp만 지워지고 기존 nand.txt는 그대로 남습니다.\n• 기존 nand.txt 삭제가 실패하면: 교체를 멈추고 기존 파일을 유지합니다.\n• 삭제한 뒤 rename()이 실패하거나 그 사이에 프로그램이 종료되면: nand.txt는 없고 .tmp에만 데이터가 남습니다.\n\n마지막 경우는 아직 남은 위험입니다. 다음 실행에서 loadNAND()는 nand.txt가 없으면 빈 SSD로 처리해 모든 값이 0x00000000으로 읽히고, 그 상태로 쓰면 .tmp까지 새 내용으로 덮여 이전 데이터를 되살릴 수 없습니다. Linux에서 nand.txt를 지우고 .tmp만 남긴 상태를 만들어 이 동작을 직접 확인했습니다. 또 fclose()는 OS 버퍼까지만 보장하므로, 전원이 꺼지는 상황까지 이 구조로 막을 수는 없습니다.\n\n이 경험이 저장 매체를 NAND로 옮길 때의 설계로 이어졌습니다. FTL에서는 새 값을 빈 페이지에 먼저 쓰고, 옛 값은 나중에 GC가 지우게 해서 쓰는 도중 실패해도 이전 값이 남도록 했습니다."
             },
             {
               "title": "명령 파싱 (strtok())",
@@ -336,37 +338,13 @@
         },
         {
           "title": "결과",
-          "body": "Windows 로컬에서 실행해 확인했습니다.\n\n• write 3 0xAAAABBBB 후 read 3에서 같은 값 출력\n• fullwrite 0xABCDFFFF 후 read 50에서 같은 값 출력\n• testapp1 PASS, testapp2 PASS\n• read 100, write 3 0x123, write 3 0xabcdffff, hello 입력은 모두 INVALID COMMAND",
+          "body": "Windows에서 실행한 화면입니다.\n\n• write 3 0xAAAABBBB 후 read 3에서 같은 값 출력\n• fullwrite 0xABCDFFFF 후 read 50에서 같은 값 출력\n• testapp1 PASS, testapp2 PASS\n• read 100, write 3 0x123, write 3 0xabcdffff, hello 입력은 모두 INVALID COMMAND\n\nUbuntu 22.04 VirtualBox VM(kernel 6.8)의 nandsim에서도 확인했습니다.\n\n• 회귀 테스트: test_ssd.sh 32/32 PASS, Test Shell 시나리오 출력 일치\n• testapp3 (무작위 덮어쓰기 2000회, 500회마다 100칸 전체 비교): 불일치 0, WAF 1.097 (호스트 쓰기 2000회에 NAND 쓰기 2195회), 블록별 지우기 횟수 11~12회\n• 불량 블록 3개를 일부러 넣은 경우(nandsim badblocks=2,5, weakblocks=3:2): 불일치 0, WAF 1.315. 쓸 수 있는 블록이 줄어 GC가 더 많이 옮겼습니다.",
           "image": "/images/ssd/result-normal.webp",
           "imageAlt": "write/read, fullwrite, testapp1·testapp2 PASS 실행 화면"
         },
         {
-          "title": "v2: nandsim으로 확장",
-          "body": "v1을 정리하며 'FTL을 직접 구현해 보고 싶다'고 적었던 것을 이어서, 저장 매체를 nand.txt에서 Linux 커널의 NAND 시뮬레이터 nandsim(/dev/mtd0)으로 바꿨습니다. Test Shell 명령과 출력은 그대로 두어 v1 테스트를 회귀 테스트로 썼습니다.",
-          "image": "/images/ssd-ftl/arch.webp",
-          "imageAlt": "TestShell → ssd → FTL → NAND 접근 계층(MTD /dev/mtd0, SIM nand.img)으로 이어지는 v2 구조와 nandsim 설정, 블록 배치",
-          "subsections": [
-            {
-              "title": "무엇이 바뀌었나",
-              "body": "• nand.txt → /dev/mtd0: nandsim은 커널이 메모리에 만들어 주는 가짜 NAND 칩입니다(256MiB, 블록 128KiB, 페이지 2KiB).\n• ssd.c: 명령 검사와 result.txt는 그대로이고, nand.txt를 통째로 읽고 쓰던 loadNAND()/saveNAND()만 FTL 호출로 바뀌었습니다.\n• nand.c (새로 추가): NAND에 '페이지 읽기·쓰기, 블록 지우기, 불량 블록 확인'을 시키는 층입니다. pread/pwrite와 ioctl(MEMERASE, MEMGETBADBLOCK, MEMSETBADBLOCK)을 씁니다.\n• ftl.c (새로 추가): 'LBA 3은 지금 블록 5 페이지 12에 있다'는 번역표(L2P)를 관리하는 층입니다.\n• Test Shell에는 무작위 덮어쓰기 검증 testapp3과 통계 명령 stats를 더했습니다."
-            },
-            {
-              "title": "왜 FTL이 필요했나",
-              "body": "nand.txt는 4번째 줄만 고쳐 쓸 수 있지만, NAND는 이미 쓴 페이지에 다시 쓸 수 없고 지우기는 페이지 64개짜리 블록 단위입니다. LBA 3을 같은 자리에 덮어쓰려면 블록 전체를 지워야 하고, 그러면 한 블록만 계속 닳고 지우는 도중 꺼지면 다른 LBA까지 잃습니다.\n\n그래서 FTL은 덮어쓰지 않고 빈 페이지에 새로 쓴 뒤 번역표를 고치고, 옛 페이지는 무효로 표시합니다. 그러면 따라오는 일이 생깁니다.\n• GC: 빈 블록이 모자라면 무효 페이지가 많은 블록에서 살아 있는 페이지만 옮기고 지웁니다.\n• 웨어 레벨링: 덜 지운 블록부터 써서 고르게 닳게 합니다.\n• 배드 블록: 불량 블록은 건너뛰고, 쓰다 실패하면 데이터를 옮긴 뒤 불량으로 표시합니다."
-            },
-            {
-              "title": "결과",
-              "body": "Ubuntu 22.04 VirtualBox VM(kernel 6.8)의 nandsim에서 확인했습니다.\n\n• v1 테스트: test_ssd.sh 32/32 PASS, Test Shell 시나리오 출력 일치\n• testapp3 (무작위 덮어쓰기 2000회, 500회마다 100칸 전체 비교): 불일치 0, WAF 1.097 (호스트 쓰기 2000회에 NAND 쓰기 2195회), 블록별 지우기 횟수 11~12회\n• 불량 블록 3개를 일부러 넣은 경우(nandsim badblocks=2,5, weakblocks=3:2): 불일치 0, WAF 1.315. 쓸 수 있는 블록이 줄어 GC가 더 많이 옮겼습니다.\n\nnandsim에는 속도 모델이 없어 속도는 재지 않았습니다."
-            },
-            {
-              "title": "맡은 범위",
-              "body": "고도화 목표와 요구사항(무엇을 바꾸고 무엇을 유지할지, 어떤 지표로 볼지)을 정하고, VM에 nandsim을 구성해 직접 빌드·테스트·측정했습니다. nand.c와 ftl.c 코드는 AI(Claude)와 협업해 작성했습니다."
-            }
-          ]
-        },
-        {
           "title": "배운 점",
-          "body": "• C 문자열 처리의 동작 원리: 명령어 파싱에 strtok을 쓰면서 원본 문자열을 직접 바꾸고 내부 상태를 기억한다는 점을 이해했습니다. fgets 길이 초과 처리까지 다루며 입력을 다룰 때 경계 조건부터 확인하는 습관이 생겼습니다.\n• 검증 자동화: testapp1, testapp2처럼 쓰기, 덮어쓰기, 읽기 비교를 스크립트로 반복하며 사람이 확인하던 일을 PASS/FAIL로 판정하도록 만들었습니다. 저장 중 실패 같은 예외 상황을 직접 재현해 보는 것도 검증의 일부라는 것을 배웠습니다.\n• SSD·NAND 도메인 이해: LBA 단위 읽기/쓰기, 컨트롤러와 FTL의 역할, NAND의 마모와 데이터 보존 문제를 공부하며 이 프로젝트가 실제 SSD의 어느 부분을 흉내 낸 것인지 구분할 수 있게 됐습니다.\n\n• v2를 해 보며: LBA는 호스트가 부르는 주소이고, FTL은 그 주소를 NAND의 실제 위치로 바꿔 주는 번역표라는 것을 이해했습니다. 덮어쓰기가 안 된다는 NAND의 규칙 하나 때문에 GC, 웨어 레벨링, 불량 블록 처리가 줄줄이 필요해진다는 것도 직접 확인했습니다."
+          "body": "• C 문자열 처리의 동작 원리: 명령어 파싱에 strtok을 쓰면서 원본 문자열을 직접 바꾸고 내부 상태를 기억한다는 점을 이해했습니다. fgets 길이 초과 처리까지 다루며 입력을 다룰 때 경계 조건부터 확인하는 습관이 생겼습니다.\n• 검증 자동화: testapp1, testapp2처럼 쓰기, 덮어쓰기, 읽기 비교를 스크립트로 반복하며 사람이 확인하던 일을 PASS/FAIL로 판정하도록 만들었습니다. 저장 중 실패 같은 예외 상황을 직접 재현해 보는 것도 검증의 일부라는 것을 배웠습니다.\n• SSD·NAND 도메인 이해: LBA 단위 읽기/쓰기, 컨트롤러와 FTL의 역할, NAND의 마모와 데이터 보존 문제를 공부하며 이 프로젝트가 실제 SSD의 어느 부분을 흉내 낸 것인지 구분할 수 있게 됐습니다.\n• FTL의 역할: LBA는 호스트가 부르는 주소이고, FTL은 그 주소를 NAND의 실제 위치로 바꿔 주는 번역표라는 것을 이해했습니다. 덮어쓰기가 안 된다는 NAND의 규칙 하나 때문에 GC, 웨어 레벨링, 불량 블록 처리가 줄줄이 필요해진다는 것도 직접 확인했습니다."
         }
       ]
     },
